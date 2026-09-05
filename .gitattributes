@@ -1,0 +1,72 @@
+# 기본: Git이 텍스트 파일을 판별해 저장소에는 LF로 정규화한다.
+# 작업 디렉터리 줄바꿈은 core.autocrlf 설정을 따른다.
+* text=auto
+
+# 소스 코드
+*.h      text diff=cpp
+*.hpp    text diff=cpp
+*.c      text diff=cpp
+*.cpp    text diff=cpp
+*.inl    text diff=cpp
+*.cs     text diff=csharp
+
+# 설정 / 프로젝트 파일
+*.ini      text
+*.uproject text
+*.uplugin  text
+*.json     text
+*.xml      text
+*.md       text
+*.txt      text
+
+# 플랫폼별 줄바꿈이 강제되는 스크립트
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sh  text eol=lf
+
+# ── 바이너리: 줄바꿈 변환·텍스트 diff 금지 ──
+# 언리얼 에셋
+*.uasset binary
+*.umap   binary
+*.ubulk  binary
+*.uexp   binary
+
+# 이미지
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tga binary
+*.bmp binary
+*.tif binary
+*.psd binary
+*.exr binary
+*.hdr binary
+*.dds binary
+*.ico binary
+
+# 3D 모델
+*.fbx binary
+*.obj binary
+*.blend binary
+*.dae binary
+
+# 오디오 / 비디오
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.flac binary
+*.mp4 binary
+*.mov binary
+*.avi binary
+
+# 폰트 / 압축 / 라이브러리
+*.ttf binary
+*.otf binary
+*.zip binary
+*.7z  binary
+*.dll binary
+*.lib binary
+*.pdb binary
+*.so  binary
+*.dylib binary
