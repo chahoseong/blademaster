@@ -16,13 +16,10 @@
 
 GAS 경험이 있으므로 셋업 위주로 짧게 끊는다.
 
-- [ ] **선행: SnSAnimsetPro 애니메이션 재고 조사** — 필요한 목록이 실제로 있는지 확인
-      (공격 3타 / 가드 / 가드 피격 / 4방향 회피 / 피격 반응 / 자세 붕괴 / 치명타 피격·가해 / 사망)
-      → 없는 것이 있으면 이 시점에 설계를 조정한다. **나중에 발견하면 손해가 크다.**
 - [ ] GameplayAbilities 플러그인 활성화, `Blademaster.Build.cs`에 모듈 추가
 - [ ] 캐릭터 이동, 스프링암 카메라, EnhancedInput 매핑 (게임패드 우선 / KBM 병행)
 - [ ] `ASC` + `AttributeSet` (Health, MaxHealth, Posture, MaxPosture, PostureRegenRate)
-- [ ] `UBMTargetingComponent` — 락온
+- [ ] `UBlademasterTargetingComponent` — 락온
 
 **검증:** 락온 상태의 이동·카메라가 어색하지 않고, 어트리뷰트가 GameplayEffect를 통해서만 변경된다.
 
@@ -30,7 +27,7 @@ GAS 경험이 있으므로 셋업 위주로 짧게 끊는다.
 
 ## M1 — 공격 (25h) · 누적 33h
 
-- [ ] `UBMAttackDefinition` 데이터 에셋
+- [ ] `UBlademasterAttackDefinition` 데이터 에셋
 - [ ] 공격 GameplayAbility (몽타주 재생 + 데이터 참조)
 - [ ] `UAnimNotifyState_HitWindow` — 서버에서만 오버랩 판정, 히트 대상 중복 제거
 - [ ] HP / 자세 데미지 GameplayEffect 적용
@@ -43,10 +40,10 @@ GAS 경험이 있으므로 셋업 위주로 짧게 끊는다.
 
 ## M2 — 방어 (25h) · 누적 58h
 
-- [ ] 가드 (홀드) — 자세 축적, 방어불가 공격에는 무효
+- [ ] 가드 (홀드) — 자세 소모, 방어불가 공격에는 무효
 - [ ] 저스트 가드 — 프레임 윈도우 판정, 성공 시 적 자세 역데미지, **실패 시 일반 가드로 폴백**
 - [ ] 회피 — `UAnimNotifyState_Invulnerable` 무적 구간 + 자세 소폭 소모
-- [ ] 자세 자연 회복 (HP 잔량 연동), 최대치 도달 시 붕괴(Stagger) 상태
+- [ ] 자세 자연 회복 (HP 잔량 연동), 0 도달 시 붕괴(Stagger) 상태
 - [ ] 치명타 어빌리티 (양방향 — 플레이어도 당한다)
 - [ ] 공격 타입 시스템 (일반 / 방어불가) + 텔레그래프 표시
 - [ ] **PIE 리슨 서버 2인 검증 1회**
@@ -59,7 +56,7 @@ GAS 경험이 있으므로 셋업 위주로 짧게 끊는다.
 ## M3 — 적 AI (30h) · 누적 88h
 
 - [ ] 행동 트리 + 블랙보드, 접근 / 간격 유지 / 배회
-- [ ] `UBMEnemyDefinition` 기반 공격 선택 (가중치)
+- [ ] `UBlademasterEnemyDefinition` 기반 공격 선택 (가중치)
 - [ ] 텔레그래프 (선딜 + 공격 타입 인디케이터)
 - [ ] 적의 방어 행동 (잡몹 A는 가드 수행)
 - [ ] **잡몹 A "리듬 교사"** — 느린 3타, 방어불가 없음, 가드함
