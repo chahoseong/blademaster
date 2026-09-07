@@ -7,6 +7,10 @@ public class Blademaster : ModuleRules
 	public Blademaster(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		
+		PublicIncludePaths.AddRange([
+			"Blademaster"
+		]);
 	
 		PublicDependencyModuleNames.AddRange([
 				"Core",
