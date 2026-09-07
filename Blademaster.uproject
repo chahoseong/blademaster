@@ -41,6 +41,10 @@
 		{
 			"Name": "ConfigSettingsToolset",
 			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
 		}
 	]
 }
