@@ -18,7 +18,7 @@ GAS 경험이 있으므로 셋업 위주로 짧게 끊는다.
 
 - [ ] GameplayAbilities 플러그인 활성화, `Blademaster.Build.cs`에 모듈 추가
 - [ ] 캐릭터 이동, 스프링암 카메라, EnhancedInput 매핑 (게임패드 우선 / KBM 병행)
-- [ ] `ASC` + `AttributeSet` (Health, MaxHealth, Posture, MaxPosture, PostureRegenRate)
+- [ ] `ASC` + `AttributeSet` (Health, MaxHealth, Posture, MaxPosture, BasePostureRegenRate)
 - [ ] `UBlademasterTargetingComponent` — 락온
 
 **검증:** 락온 상태의 이동·카메라가 어색하지 않고, 어트리뷰트가 GameplayEffect를 통해서만 변경된다.
