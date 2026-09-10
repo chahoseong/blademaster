@@ -7,7 +7,20 @@
 
 UBlademasterTargetingComponent::UBlademasterTargetingComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
+}
+
+void UBlademasterTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// TWeakObjectPtr는 대상이 파괴되면 조용히 무효화될 뿐 이벤트를 주지 않는다.
+	// 락온 중에만(SetCurrentTarget에서 틱을 켬) 매 프레임 확인해 명시적으로 해제한다.
+	if (CurrentTarget.IsStale())
+	{
+		SetCurrentTarget(nullptr);
+	}
 }
 
 bool UBlademasterTargetingComponent::ToggleLockOn()
@@ -203,12 +216,17 @@ void UBlademasterTargetingComponent::SwitchTarget(float ScreenDirection)
 
 void UBlademasterTargetingComponent::SetCurrentTarget(AActor* NewTarget)
 {
-	if (CurrentTarget.Get() == NewTarget)
+	// CurrentTarget.Get()은 "한 번도 설정된 적 없음"과 "설정됐던 대상이 파괴됨"
+	// 둘 다 nullptr을 반환해 구분이 안 된다. 후자와 진짜 nullptr 대입을 구분하려면
+	// IsExplicitlyNull()(명시적으로 null이 대입/초기화된 경우만 true)을 써야 한다.
+	const bool bUnchanged = NewTarget ? CurrentTarget.Get() == NewTarget : CurrentTarget.IsExplicitlyNull();
+	if (bUnchanged)
 	{
 		return;
 	}
 
 	CurrentTarget = NewTarget;
+	SetComponentTickEnabled(NewTarget != nullptr);
 
 	UE_LOG(LogTemp, Log, TEXT("[Targeting] %s: %s"), *GetNameSafe(GetOwner()),
 		NewTarget ? *FString::Printf(TEXT("locked onto %s"), *GetNameSafe(NewTarget)) : TEXT("released"));
