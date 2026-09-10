@@ -16,6 +16,8 @@ class BLADEMASTER_API UBlademasterTargetingComponent : public UActorComponent
 public:
 	UBlademasterTargetingComponent();
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	// 락온 중이면 해제, 아니면 후보 중 하나를 선택해 락온한다. 락온에 성공하면 true.
 	bool ToggleLockOn();
 
