@@ -8,6 +8,7 @@
 class UAbilitySystemComponent;
 class UBlademasterAttributeSet;
 class UGameplayEffect;
+class UStaticMeshComponent;
 
 UCLASS()
 class BLADEMASTER_API ABlademasterCharacter : public ACharacter, public IAbilitySystemInterface
@@ -18,6 +19,9 @@ public:
 	ABlademasterCharacter();
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UStaticMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	UStaticMeshComponent* GetShieldMesh() const { return ShieldMesh; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -31,4 +35,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AbilitySystem", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UGameplayEffect> InitializeAttributesEffect;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> WeaponMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> ShieldMesh;
 };
