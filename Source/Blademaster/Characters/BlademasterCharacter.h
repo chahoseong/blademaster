@@ -8,6 +8,7 @@
 class UAbilitySystemComponent;
 class UBlademasterAttributeSet;
 class UBlademasterCombatComponent;
+class UBlademasterWeaponTraceComponent;
 class UGameplayEffect;
 class UMotionWarpingComponent;
 class UStaticMeshComponent;
@@ -28,6 +29,9 @@ public:
 	UStaticMeshComponent* GetShieldMesh() const { return ShieldMesh; }
 	UBlademasterCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; }
+	UBlademasterWeaponTraceComponent* GetWeaponTraceComponent() const { return WeaponTraceComponent; }
+
+	float GetWeaponTraceRadius() const { return WeaponTraceRadius; }
 
 	// 공격이 향해야 할 방향. 어빌리티는 입력을 직접 읽지 않고 이 함수로 묻는다.
 	// 기본값은 현재 액터 회전(돌지 않음) — 플레이어가 재정의한다.
@@ -58,11 +62,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> ShieldMesh;
 
+	// 칼 두께(판정용 스윕 구 반지름), cm.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	float WeaponTraceRadius = 5.f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UBlademasterCombatComponent> CombatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBlademasterWeaponTraceComponent> WeaponTraceComponent;
 
 #if !UE_BUILD_SHIPPING
 private:

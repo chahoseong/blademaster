@@ -14,9 +14,20 @@ namespace BlademasterDebug
 		TEXT("켜면 ASC를 가진 캐릭터 머리 위에 체력, 자세, 콤보, 구간 등 전투 상태를 그린다."),
 		ECVF_Cheat);
 
+	static TAutoConsoleVariable<bool> CVarDebugHitbox(
+		TEXT("Blademaster.Debug.Hitbox"),
+		false,
+		TEXT("켜면 칼 판정 스윕, 맞은 지점, 가림으로 무시된 지점을 그린다."),
+		ECVF_Cheat);
+
 	bool IsCombatDebugEnabled()
 	{
 		return CVarDebugCombat.GetValueOnGameThread();
+	}
+
+	bool IsHitboxDebugEnabled()
+	{
+		return CVarDebugHitbox.GetValueOnGameThread();
 	}
 
 	void DrawDebugTextLine(const AActor* Actor, int32 LineIndex, const FString& Text, const FColor& Color)

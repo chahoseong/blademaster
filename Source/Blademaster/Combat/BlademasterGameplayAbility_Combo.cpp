@@ -1,5 +1,6 @@
 #include "Combat/BlademasterGameplayAbility_Combo.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayTag.h"
@@ -9,6 +10,7 @@
 #include "Characters/BlademasterCharacter.h"
 #include "Combat/BlademasterAttackDefinition.h"
 #include "Combat/BlademasterComboDefinition.h"
+#include "Combat/BlademasterWeaponTraceComponent.h"
 
 #if !UE_BUILD_SHIPPING
 #include "BlademasterDebug.h"
@@ -33,24 +35,34 @@ void UBlademasterGameplayAbility_Combo::ActivateAbility(const FGameplayAbilitySp
 
 	UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: 공격 시작 (%s, 총 %d타)"), *GetNameSafe(ActorInfo->AvatarActor.Get()), *GetNameSafe(ComboDefinition), ComboDefinition->Attacks.Num());
 
-#if !UE_BUILD_SHIPPING
 	if (ABlademasterCharacter* Character = Cast<ABlademasterCharacter>(ActorInfo->AvatarActor.Get()))
 	{
+		if (UBlademasterWeaponTraceComponent* WeaponTrace = Character->GetWeaponTraceComponent())
+		{
+			WeaponTrace->OnWeaponHit.AddUObject(this, &UBlademasterGameplayAbility_Combo::OnWeaponHit);
+		}
+
+#if !UE_BUILD_SHIPPING
 		Character->OnDrawDebug.AddUObject(this, &UBlademasterGameplayAbility_Combo::DrawDebugText);
-	}
 #endif
+	}
 
 	PlayAttack(0);
 }
 
 void UBlademasterGameplayAbility_Combo::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-#if !UE_BUILD_SHIPPING
 	if (ABlademasterCharacter* Character = ActorInfo ? Cast<ABlademasterCharacter>(ActorInfo->AvatarActor.Get()) : nullptr)
 	{
+		if (UBlademasterWeaponTraceComponent* WeaponTrace = Character->GetWeaponTraceComponent())
+		{
+			WeaponTrace->OnWeaponHit.RemoveAll(this);
+		}
+
+#if !UE_BUILD_SHIPPING
 		Character->OnDrawDebug.RemoveAll(this);
-	}
 #endif
+	}
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
@@ -159,6 +171,31 @@ void UBlademasterGameplayAbility_Combo::OnComboWindowBegin()
 		UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: 타 전환 %d타 -> %d타 (선입력)"), *GetNameSafe(GetAvatarActorFromActorInfo()), CurrentAttackIndex + 1, CurrentAttackIndex + 2);
 		ProceedToNextAttack();
 	}
+}
+
+void UBlademasterGameplayAbility_Combo::OnWeaponHit(const FHitResult& Hit)
+{
+	AActor* HitActor = Hit.GetActor();
+	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
+	AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (!HitActor || !AbilitySystemComponent || !Avatar)
+	{
+		return;
+	}
+
+	// 데미지 GameplayEffect 자체는 여기서 만들지 않는다 — 이 이벤트가 하는 일은 "공격자가 결정한
+	// 공격 데이터를 들고 있으니, 맞은 대상의 피격 어빌리티가 알아서 처리하라"는 통지까지다.
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddHitResult(Hit);
+
+	FGameplayEventData Payload;
+	Payload.EventTag = BlademasterGameplayTags::GameplayEvent_WeaponHit;
+	Payload.Instigator = Avatar;
+	Payload.Target = HitActor;
+	Payload.OptionalObject = ComboDefinition;
+	Payload.ContextHandle = EffectContext;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitActor, Payload.EventTag, Payload);
 }
 
 void UBlademasterGameplayAbility_Combo::ProceedToNextAttack()

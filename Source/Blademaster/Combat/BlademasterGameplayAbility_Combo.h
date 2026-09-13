@@ -46,6 +46,10 @@ private:
 	UFUNCTION()
 	void OnComboWindowBegin();
 
+	// 소유 캐릭터의 WeaponTraceComponent가 순수 물리 판정을 알려주면, 이미 알고 있는 공격 데이터를
+	// 덧붙여 맞은 대상에게 GameplayEvent로 보낸다.
+	void OnWeaponHit(const FHitResult& Hit);
+
 	// bTransitioned로 중복 호출을 막고, 이전 몽타주 태스크를 정리한 뒤 다음 타를 재생한다.
 	void ProceedToNextAttack();
 

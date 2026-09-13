@@ -9,4 +9,6 @@ namespace BlademasterGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Input, "Attack.Window.Input", "선입력 구간. 이 구간에 눌린 공격 입력을 기억해둔다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Combo, "Attack.Window.Combo", "이어가기 구간. 시작 시 또는 구간 중 공격 입력이 있으면 다음 타로 넘어간다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Cancel, "Attack.Window.Cancel", "캔슬 구간. 이 태그가 있는 동안 다른 어빌리티가 이 공격을 끊을 수 있다(실제로 끊는 로직은 여기 없음).");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_WeaponHit, "GameplayEvent.WeaponHit", "칼 판정이 대상을 맞혔을 때 그 대상에게 보내는 이벤트. 피격 어빌리티가 AbilityTriggers로 듣는다.");
 }
