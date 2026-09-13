@@ -22,6 +22,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaSeconds) override;
 
+	// 락온 중이면 대상 방향, 아니면 마지막 이동 입력 방향(입력이 없으면 현재 회전 유지).
+	virtual FRotator GetAttackDirection() const override;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void NotifyControllerChanged() override;
@@ -71,4 +74,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> AttackAction;
+
+private:
+	// 락온 중이 아닐 때, 콤보 전체에 걸쳐 스틱 방향을 한 번만 반영하기 위한 캐시.
+	// State.Attacking이 없는 동안(Tick에서) 매번 리셋되어, 다음 공격 때 새로 잡힌다.
+	mutable bool bFreeAimDirectionCached = false;
+	mutable FRotator CachedFreeAimDirection = FRotator::ZeroRotator;
 };

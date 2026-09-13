@@ -21,6 +21,7 @@ public class Blademaster : ModuleRules
 				"GameplayAbilities",
 				"GameplayTags",
 				"GameplayTasks",
+				"MotionWarping",
 		]);
 
 		PrivateDependencyModuleNames.AddRange([

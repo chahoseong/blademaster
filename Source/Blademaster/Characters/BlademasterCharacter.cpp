@@ -1,18 +1,25 @@
 #include "Characters/BlademasterCharacter.h"
 
+#include "AbilitySystem/BlademasterAbilitySystemComponent.h"
 #include "AbilitySystem/BlademasterAttributeSet.h"
-#include "AbilitySystemComponent.h"
+#include "BlademasterGameplayTags.h"
 #include "Combat/BlademasterCombatComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameplayEffect.h"
+#include "MotionWarpingComponent.h"
+
+namespace
+{
+	const FName AttackDirectionWarpTargetName(TEXT("AttackDirection"));
+}
 
 ABlademasterCharacter::ABlademasterCharacter()
 {
 	SetNetUpdateFrequency(100.f);
 	SetMinNetUpdateFrequency(2.f);
 
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<UBlademasterAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
@@ -27,11 +34,31 @@ ABlademasterCharacter::ABlademasterCharacter()
 	ShieldMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	CombatComponent = CreateDefaultSubobject<UBlademasterCombatComponent>(TEXT("CombatComponent"));
+
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+}
+
+void ABlademasterCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	// 공격 어빌리티가 활성 상태인 동안, 방향 전환 구간에만 실제로 회전이 걸리도록
+	// 워프 타깃을 계속 최신 방향으로 갱신해둔다(몽타주의 Motion Warping 노티파이가
+	// 그 구간에서만 이 타깃을 실제로 사용한다). 위치는 항상 현재 위치라 이동 자체는 건드리지 않는다.
+	if (MotionWarpingComponent && AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Attacking))
+	{
+		MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(AttackDirectionWarpTargetName, GetActorLocation(), GetAttackDirection());
+	}
 }
 
 UAbilitySystemComponent* ABlademasterCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+FRotator ABlademasterCharacter::GetAttackDirection() const
+{
+	return GetActorRotation();
 }
 
 void ABlademasterCharacter::BeginPlay()
