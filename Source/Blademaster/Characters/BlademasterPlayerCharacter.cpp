@@ -167,7 +167,7 @@ void ABlademasterPlayerCharacter::AttackPressed(const FInputActionValue& Value)
 {
 	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
 	{
-		Combat->AbilityInputTagPressed(TAG_InputTag_Attack);
+		Combat->AbilityInputTagPressed(BlademasterGameplayTags::InputTag_Attack);
 	}
 }
 
@@ -175,6 +175,6 @@ void ABlademasterPlayerCharacter::AttackReleased(const FInputActionValue& Value)
 {
 	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
 	{
-		Combat->AbilityInputTagReleased(TAG_InputTag_Attack);
+		Combat->AbilityInputTagReleased(BlademasterGameplayTags::InputTag_Attack);
 	}
 }

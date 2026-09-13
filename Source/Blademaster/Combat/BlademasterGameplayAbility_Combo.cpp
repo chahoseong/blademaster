@@ -10,7 +10,7 @@ UBlademasterGameplayAbility_Combo::UBlademasterGameplayAbility_Combo()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 
-	SetAssetTags(FGameplayTagContainer(TAG_Ability_Attack));
+	SetAssetTags(FGameplayTagContainer(BlademasterGameplayTags::Ability_Attack));
 }
 
 void UBlademasterGameplayAbility_Combo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
