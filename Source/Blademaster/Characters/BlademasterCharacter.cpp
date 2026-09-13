@@ -4,6 +4,8 @@
 #include "AbilitySystem/BlademasterAttributeSet.h"
 #include "BlademasterGameplayTags.h"
 #include "Combat/BlademasterCombatComponent.h"
+#include "Combat/BlademasterWeaponTraceComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameplayEffect.h"
@@ -30,6 +32,11 @@ ABlademasterCharacter::ABlademasterCharacter()
 
 	AttributeSet = CreateDefaultSubobject<UBlademasterAttributeSet>(TEXT("AttributeSet"));
 
+	// 판정은 서버에서만 도는데, 화면에 안 보이면 뼈 위치가 갱신되지 않아 칼 소켓·피직스 바디가
+	// 제자리에 멈춘다. 그래서 서버·클라 구분 없이 항상 뼈를 갱신하도록 한다.
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	GetMesh()->SetCollisionProfileName(FName(TEXT("BlademasterCharacterMesh")));
+
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(GetMesh(), TEXT("SOC_hand_r"));
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -41,6 +48,8 @@ ABlademasterCharacter::ABlademasterCharacter()
 	CombatComponent = CreateDefaultSubobject<UBlademasterCombatComponent>(TEXT("CombatComponent"));
 
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+
+	WeaponTraceComponent = CreateDefaultSubobject<UBlademasterWeaponTraceComponent>(TEXT("WeaponTraceComponent"));
 }
 
 void ABlademasterCharacter::Tick(float DeltaSeconds)

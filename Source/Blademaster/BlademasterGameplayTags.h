@@ -15,4 +15,8 @@ namespace BlademasterGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window_Input);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window_Combo);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window_Cancel);
+
+	// 칼 판정이 대상을 맞혔을 때 그 대상에게 SendGameplayEventToActor로 보내는 이벤트 태그.
+	// 맞은 쪽의 피격 어빌리티가 AbilityTriggers로 이 태그를 듣고 활성화된다.
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_WeaponHit);
 }
