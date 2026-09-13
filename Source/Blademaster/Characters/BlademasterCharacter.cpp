@@ -7,7 +7,12 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameplayEffect.h"
+#include "GameplayTagContainer.h"
 #include "MotionWarpingComponent.h"
+
+#if !UE_BUILD_SHIPPING
+#include "BlademasterDebug.h"
+#endif
 
 namespace
 {
@@ -49,6 +54,14 @@ void ABlademasterCharacter::Tick(float DeltaSeconds)
 	{
 		MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(AttackDirectionWarpTargetName, GetActorLocation(), GetAttackDirection());
 	}
+
+#if !UE_BUILD_SHIPPING
+	if (BlademasterDebug::IsCombatDebugEnabled())
+	{
+		DrawOwnCombatDebugText();
+		OnDrawDebug.Broadcast();
+	}
+#endif
 }
 
 UAbilitySystemComponent* ABlademasterCharacter::GetAbilitySystemComponent() const
@@ -115,3 +128,37 @@ void ABlademasterCharacter::PossessedBy(AController* NewController)
 			: EGameplayEffectReplicationMode::Minimal);
 	}
 }
+
+#if !UE_BUILD_SHIPPING
+void ABlademasterCharacter::DrawOwnCombatDebugText() const
+{
+	if (AttributeSet)
+	{
+		BlademasterDebug::DrawDebugTextLine(this, 0, FString::Printf(TEXT("HP: %.0f / %.0f"), AttributeSet->GetHealth(), AttributeSet->GetMaxHealth()));
+		BlademasterDebug::DrawDebugTextLine(this, 1, FString::Printf(TEXT("Posture: %.0f / %.0f"), AttributeSet->GetPosture(), AttributeSet->GetMaxPosture()));
+	}
+
+	if (AbilitySystemComponent)
+	{
+		// Attack.Window의 하위 태그를 전부 나열한다 — 새 구간 태그가 생겨도 이 코드는 그대로다.
+		static const FGameplayTag WindowRootTag = FGameplayTag::RequestGameplayTag(FName("Attack.Window"));
+
+		FGameplayTagContainer OwnedTags;
+		AbilitySystemComponent->GetOwnedGameplayTags(OwnedTags);
+
+		TArray<FString> ActiveWindowNames;
+		for (const FGameplayTag& Tag : OwnedTags)
+		{
+			if (Tag != WindowRootTag && Tag.MatchesTag(WindowRootTag))
+			{
+				FString ParentPath, LeafName;
+				Tag.ToString().Split(TEXT("."), &ParentPath, &LeafName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+				ActiveWindowNames.Add(LeafName);
+			}
+		}
+
+		const FString WindowText = ActiveWindowNames.Num() > 0 ? FString::Join(ActiveWindowNames, TEXT(", ")) : TEXT("-");
+		BlademasterDebug::DrawDebugTextLine(this, 2, FString::Printf(TEXT("Window: %s"), *WindowText));
+	}
+}
+#endif

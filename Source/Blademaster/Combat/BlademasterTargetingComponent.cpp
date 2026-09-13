@@ -1,5 +1,6 @@
 #include "Combat/BlademasterTargetingComponent.h"
 
+#include "BlademasterLogChannels.h"
 #include "Combat/TargetableComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
@@ -44,7 +45,7 @@ bool UBlademasterTargetingComponent::ToggleLockOn()
 	const FVector CameraForward = CameraRotation.Vector();
 
 	const TArray<AActor*> Candidates = GatherCandidates(Owner->GetActorLocation());
-	UE_LOG(LogTemp, Log, TEXT("[Targeting] ToggleLockOn: %d candidate(s) in range"), Candidates.Num());
+	UE_LOG(LogBlademasterTargeting, Verbose, TEXT("ToggleLockOn: %d candidate(s) in range"), Candidates.Num());
 
 	AActor* BestCandidate = nullptr;
 	float BestAngle = TNumericLimits<float>::Max();
@@ -53,7 +54,7 @@ bool UBlademasterTargetingComponent::ToggleLockOn()
 	{
 		float Angle;
 		const bool bPassed = PassesAngleAndOcclusion(Candidate, CameraLocation, CameraForward, Angle);
-		UE_LOG(LogTemp, Log, TEXT("[Targeting]   %s: angle=%.1f passed=%s"), *GetNameSafe(Candidate), Angle, bPassed ? TEXT("true") : TEXT("false"));
+		UE_LOG(LogBlademasterTargeting, Verbose, TEXT("  %s: angle=%.1f passed=%s"), *GetNameSafe(Candidate), Angle, bPassed ? TEXT("true") : TEXT("false"));
 
 		if (!bPassed)
 		{
@@ -129,13 +130,13 @@ void UBlademasterTargetingComponent::EvaluateStickSwitchInput(float StickX)
 
 	if (StickX >= TargetSwitchStickThreshold)
 	{
-		UE_LOG(LogTemp, Log, TEXT("[Targeting] Stick switch RIGHT (StickX=%.2f)"), StickX);
+		UE_LOG(LogBlademasterTargeting, Verbose, TEXT("Stick switch RIGHT (StickX=%.2f)"), StickX);
 		SwitchTargetRight();
 		bStickSwitchConsumedThisGesture = true;
 	}
 	else if (StickX <= -TargetSwitchStickThreshold)
 	{
-		UE_LOG(LogTemp, Log, TEXT("[Targeting] Stick switch LEFT (StickX=%.2f)"), StickX);
+		UE_LOG(LogBlademasterTargeting, Verbose, TEXT("Stick switch LEFT (StickX=%.2f)"), StickX);
 		SwitchTargetLeft();
 		bStickSwitchConsumedThisGesture = true;
 	}
@@ -143,7 +144,7 @@ void UBlademasterTargetingComponent::EvaluateStickSwitchInput(float StickX)
 
 void UBlademasterTargetingComponent::ResetStickSwitchGesture()
 {
-	UE_LOG(LogTemp, Log, TEXT("[Targeting] Stick switch gesture reset"));
+	UE_LOG(LogBlademasterTargeting, Verbose, TEXT("Stick switch gesture reset"));
 	bStickSwitchConsumedThisGesture = false;
 }
 
@@ -228,7 +229,7 @@ void UBlademasterTargetingComponent::SetCurrentTarget(AActor* NewTarget)
 	CurrentTarget = NewTarget;
 	SetComponentTickEnabled(NewTarget != nullptr);
 
-	UE_LOG(LogTemp, Log, TEXT("[Targeting] %s: %s"), *GetNameSafe(GetOwner()),
+	UE_LOG(LogBlademasterTargeting, Log, TEXT("%s: %s"), *GetNameSafe(GetOwner()),
 		NewTarget ? *FString::Printf(TEXT("locked onto %s"), *GetNameSafe(NewTarget)) : TEXT("released"));
 
 	OnLockOnTargetChanged.Broadcast(NewTarget);

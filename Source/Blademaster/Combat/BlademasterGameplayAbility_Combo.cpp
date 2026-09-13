@@ -5,8 +5,14 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayTag.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
 #include "BlademasterGameplayTags.h"
+#include "BlademasterLogChannels.h"
+#include "Characters/BlademasterCharacter.h"
 #include "Combat/BlademasterAttackDefinition.h"
 #include "Combat/BlademasterComboDefinition.h"
+
+#if !UE_BUILD_SHIPPING
+#include "BlademasterDebug.h"
+#endif
 
 UBlademasterGameplayAbility_Combo::UBlademasterGameplayAbility_Combo()
 {
@@ -25,7 +31,28 @@ void UBlademasterGameplayAbility_Combo::ActivateAbility(const FGameplayAbilitySp
 		return;
 	}
 
+	UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: 공격 시작 (%s, 총 %d타)"), *GetNameSafe(ActorInfo->AvatarActor.Get()), *GetNameSafe(ComboDefinition), ComboDefinition->Attacks.Num());
+
+#if !UE_BUILD_SHIPPING
+	if (ABlademasterCharacter* Character = Cast<ABlademasterCharacter>(ActorInfo->AvatarActor.Get()))
+	{
+		Character->OnDrawDebug.AddUObject(this, &UBlademasterGameplayAbility_Combo::DrawDebugText);
+	}
+#endif
+
 	PlayAttack(0);
+}
+
+void UBlademasterGameplayAbility_Combo::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+#if !UE_BUILD_SHIPPING
+	if (ABlademasterCharacter* Character = ActorInfo ? Cast<ABlademasterCharacter>(ActorInfo->AvatarActor.Get()) : nullptr)
+	{
+		Character->OnDrawDebug.RemoveAll(this);
+	}
+#endif
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UBlademasterGameplayAbility_Combo::PlayAttack(int32 Index)
@@ -40,6 +67,16 @@ void UBlademasterGameplayAbility_Combo::PlayAttack(int32 Index)
 	CurrentAttackIndex = Index;
 	bInputBuffered = false;
 	bTransitioned = false;
+
+	// 이전 타의 구간 태그가 아직 안 지워졌을 수 있다(이전 몽타주를 EndTask로 끊어도 실제
+	// 블렌드아웃·NotifyEnd는 나중에 처리된다). 남아있으면 이번 타의 WaitGameplayTagAdded가
+	// "이미 켜져 있으니 즉시 발동"으로 오작동해 조기 소모되므로, 여기서 미리 정리해둔다.
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+	{
+		ASC->RemoveLooseGameplayTag(BlademasterGameplayTags::Attack_Window_Input);
+		ASC->RemoveLooseGameplayTag(BlademasterGameplayTags::Attack_Window_Combo);
+		ASC->RemoveLooseGameplayTag(BlademasterGameplayTags::Attack_Window_Cancel);
+	}
 
 	CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, Montage);
 	CurrentMontageTask->OnCompleted.AddDynamic(this, &UBlademasterGameplayAbility_Combo::OnMontageCompleted);
@@ -85,6 +122,8 @@ void UBlademasterGameplayAbility_Combo::OnMontageInterrupted()
 		return;
 	}
 
+	UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: 공격 취소 (%d타)"), *GetNameSafe(GetAvatarActorFromActorInfo()), CurrentAttackIndex + 1);
+
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, true);
 }
 
@@ -95,6 +134,7 @@ void UBlademasterGameplayAbility_Combo::OnInputPressed(float TimeWaited)
 	// 이어가기 구간 중 입력이면 기억할 필요 없이 바로 다음 타로 넘어간다.
 	if (AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::Attack_Window_Combo))
 	{
+		UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: 타 전환 %d타 -> %d타 (늦은 입력)"), *GetNameSafe(GetAvatarActorFromActorInfo()), CurrentAttackIndex + 1, CurrentAttackIndex + 2);
 		ProceedToNextAttack();
 		return;
 	}
@@ -116,6 +156,7 @@ void UBlademasterGameplayAbility_Combo::OnComboWindowBegin()
 {
 	if (bInputBuffered)
 	{
+		UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: 타 전환 %d타 -> %d타 (선입력)"), *GetNameSafe(GetAvatarActorFromActorInfo()), CurrentAttackIndex + 1, CurrentAttackIndex + 2);
 		ProceedToNextAttack();
 	}
 }
@@ -142,3 +183,17 @@ void UBlademasterGameplayAbility_Combo::ProceedToNextAttack()
 
 	PlayAttack(CurrentAttackIndex + 1);
 }
+
+#if !UE_BUILD_SHIPPING
+void UBlademasterGameplayAbility_Combo::DrawDebugText()
+{
+	const AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (!Avatar || !ComboDefinition)
+	{
+		return;
+	}
+
+	const FString Text = FString::Printf(TEXT("Combo: %d/%d%s"), CurrentAttackIndex + 1, ComboDefinition->Attacks.Num(), bInputBuffered ? TEXT(" [선입력 대기]") : TEXT(""));
+	BlademasterDebug::DrawDebugTextLine(Avatar, 3, Text, FColor::Yellow);
+}
+#endif

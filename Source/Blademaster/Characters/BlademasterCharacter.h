@@ -33,6 +33,12 @@ public:
 	// 기본값은 현재 액터 회전(돌지 않음) — 플레이어가 재정의한다.
 	virtual FRotator GetAttackDirection() const;
 
+#if !UE_BUILD_SHIPPING
+	// 매 틱, "지금 네 디버그 정보를 그려라"라는 신호. 이 캐릭터가 소유한 어빌리티 등이
+	// 여기에 바인딩해서 자기 정보를 그린다 — 캐릭터는 누가 듣는지 알 필요가 없다.
+	FSimpleMulticastDelegate OnDrawDebug;
+#endif
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -57,4 +63,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
+
+#if !UE_BUILD_SHIPPING
+private:
+	// 체력·자세·구간 태그 등 이 캐릭터 자신이 소유한 정보를 머리 위에 그린다.
+	void DrawOwnCombatDebugText() const;
+#endif
 };

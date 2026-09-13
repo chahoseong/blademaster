@@ -21,6 +21,7 @@ public:
 	UBlademasterGameplayAbility_Combo();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combo")
@@ -61,4 +62,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_WaitInputPress> CurrentInputTask;
+
+#if !UE_BUILD_SHIPPING
+	// 소유 캐릭터의 OnDrawDebug에 바인딩되어, 몇 타째인지·선입력을 들고 있는지를 그린다.
+	void DrawDebugText();
+#endif
 };
