@@ -2,6 +2,7 @@
 
 #include "AbilitySystem/BlademasterAttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "Combat/BlademasterCombatComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameplayEffect.h"
@@ -24,6 +25,8 @@ ABlademasterCharacter::ABlademasterCharacter()
 	ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShieldMesh"));
 	ShieldMesh->SetupAttachment(GetMesh(), TEXT("SOC_lowerarm_l"));
 	ShieldMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	CombatComponent = CreateDefaultSubobject<UBlademasterCombatComponent>(TEXT("CombatComponent"));
 }
 
 UAbilitySystemComponent* ABlademasterCharacter::GetAbilitySystemComponent() const
@@ -53,6 +56,13 @@ void ABlademasterCharacter::BeginPlay()
 	// 나중에 재빙의가 생기는 기능(컷신, 관전 등)을 추가하게 되면 PossessedBy에도
 	// InitAbilityActorInfo(또는 RefreshAbilityActorInfo)를 추가해야 한다.
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	// 어빌리티 부여는 서버 권위 데이터라 서버에서만, 그리고 InitAbilityActorInfo 이후에 한다.
+	// BeginPlay가 액터 생애주기당 한 번만 호출되므로(위 주석 참고) 여기서 주면 중복 부여가 없다.
+	if (HasAuthority() && CombatComponent)
+	{
+		CombatComponent->GrantStartingAbilities();
+	}
 
 	if (HasAuthority() && InitializeAttributesEffect)
 	{

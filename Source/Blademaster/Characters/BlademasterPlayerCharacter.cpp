@@ -1,6 +1,8 @@
 #include "Characters/BlademasterPlayerCharacter.h"
 
+#include "BlademasterGameplayTags.h"
 #include "Camera/CameraComponent.h"
+#include "Combat/BlademasterCombatComponent.h"
 #include "Combat/BlademasterTargetingComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
@@ -93,6 +95,8 @@ void ABlademasterPlayerCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		EnhancedInputComponent->BindAction(SwitchTargetMouseAction, ETriggerEvent::Triggered, this, &ABlademasterPlayerCharacter::SwitchTargetMouse);
 		EnhancedInputComponent->BindAction(SwitchTargetStickAction, ETriggerEvent::Triggered, this, &ABlademasterPlayerCharacter::SwitchTargetStick);
 		EnhancedInputComponent->BindAction(SwitchTargetStickAction, ETriggerEvent::Completed, this, &ABlademasterPlayerCharacter::ResetSwitchTargetStick);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ABlademasterPlayerCharacter::AttackPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ABlademasterPlayerCharacter::AttackReleased);
 	}
 }
 
@@ -156,5 +160,21 @@ void ABlademasterPlayerCharacter::ResetSwitchTargetStick(const FInputActionValue
 	if (TargetingComponent)
 	{
 		TargetingComponent->ResetStickSwitchGesture();
+	}
+}
+
+void ABlademasterPlayerCharacter::AttackPressed(const FInputActionValue& Value)
+{
+	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
+	{
+		Combat->AbilityInputTagPressed(TAG_InputTag_Attack);
+	}
+}
+
+void ABlademasterPlayerCharacter::AttackReleased(const FInputActionValue& Value)
+{
+	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
+	{
+		Combat->AbilityInputTagReleased(TAG_InputTag_Attack);
 	}
 }

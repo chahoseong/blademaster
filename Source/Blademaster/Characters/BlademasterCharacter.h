@@ -7,6 +7,7 @@
 
 class UAbilitySystemComponent;
 class UBlademasterAttributeSet;
+class UBlademasterCombatComponent;
 class UGameplayEffect;
 class UStaticMeshComponent;
 
@@ -22,6 +23,7 @@ public:
 
 	UStaticMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	UStaticMeshComponent* GetShieldMesh() const { return ShieldMesh; }
+	UBlademasterCombatComponent* GetCombatComponent() const { return CombatComponent; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,4 +43,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> ShieldMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBlademasterCombatComponent> CombatComponent;
 };

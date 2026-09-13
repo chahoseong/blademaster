@@ -32,6 +32,8 @@ protected:
 	void SwitchTargetMouse(const FInputActionValue& Value);
 	void SwitchTargetStick(const FInputActionValue& Value);
 	void ResetSwitchTargetStick(const FInputActionValue& Value);
+	void AttackPressed(const FInputActionValue& Value);
+	void AttackReleased(const FInputActionValue& Value);
 
 	// 락온 대상이 바뀔 때(락온/해제 포함) 회전 모드를 전환한다.
 	void OnLockOnTargetChanged(AActor* NewTarget);
@@ -66,4 +68,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SwitchTargetStickAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> AttackAction;
 };
