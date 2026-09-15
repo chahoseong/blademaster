@@ -2,6 +2,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/BlademasterGameplayEffectContext.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayTag.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
@@ -178,7 +179,7 @@ void UBlademasterGameplayAbility_Combo::OnWeaponHit(const FHitResult& Hit)
 	AActor* HitActor = Hit.GetActor();
 	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
 	AActor* Avatar = GetAvatarActorFromActorInfo();
-	if (!HitActor || !AbilitySystemComponent || !Avatar)
+	if (!HitActor || !AbilitySystemComponent || !Avatar || !ComboDefinition || !ComboDefinition->Attacks.IsValidIndex(CurrentAttackIndex))
 	{
 		return;
 	}
@@ -188,11 +189,17 @@ void UBlademasterGameplayAbility_Combo::OnWeaponHit(const FHitResult& Hit)
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddHitResult(Hit);
 
+	if (FBlademasterGameplayEffectContext* BlademasterContext = static_cast<FBlademasterGameplayEffectContext*>(EffectContext.Get()))
+	{
+		const FBlademasterAttackDefinition& AttackDefinition = ComboDefinition->Attacks[CurrentAttackIndex];
+		BlademasterContext->HealthDamage = AttackDefinition.HealthDamage;
+		BlademasterContext->PostureDamage = AttackDefinition.PostureDamage;
+	}
+
 	FGameplayEventData Payload;
 	Payload.EventTag = BlademasterGameplayTags::GameplayEvent_WeaponHit;
 	Payload.Instigator = Avatar;
 	Payload.Target = HitActor;
-	Payload.OptionalObject = ComboDefinition;
 	Payload.ContextHandle = EffectContext;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitActor, Payload.EventTag, Payload);

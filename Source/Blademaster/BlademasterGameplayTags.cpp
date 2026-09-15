@@ -11,4 +11,7 @@ namespace BlademasterGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Cancel, "Attack.Window.Cancel", "캔슬 구간. 이 태그가 있는 동안 다른 어빌리티가 이 공격을 끊을 수 있다(실제로 끊는 로직은 여기 없음).");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_WeaponHit, "GameplayEvent.WeaponHit", "칼 판정이 대상을 맞혔을 때 그 대상에게 보내는 이벤트. 피격 어빌리티가 AbilityTriggers로 듣는다.");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Damage_Health, "SetByCaller.Damage.Health", "데미지 GE가 체력 메타 어트리뷰트에 넣을 값의 SetByCaller 태그.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Damage_Posture, "SetByCaller.Damage.Posture", "데미지 GE가 자세 메타 어트리뷰트에 넣을 값의 SetByCaller 태그.");
 }

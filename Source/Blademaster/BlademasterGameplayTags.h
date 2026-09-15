@@ -19,4 +19,8 @@ namespace BlademasterGameplayTags
 	// 칼 판정이 대상을 맞혔을 때 그 대상에게 SendGameplayEventToActor로 보내는 이벤트 태그.
 	// 맞은 쪽의 피격 어빌리티가 AbilityTriggers로 이 태그를 듣고 활성화된다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_WeaponHit);
+
+	// 데미지 GE의 SetByCaller 매그니튜드 태그. 피격 어빌리티가 컨텍스트의 값을 여기 실어 스펙에 넣는다.
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Damage_Health);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Damage_Posture);
 }
