@@ -13,6 +13,11 @@ class BLADEMASTER_API UBlademasterAttributeSet : public UAttributeSet
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
+	// 체력이 0이 되면 알린다. 반영 지점(PostGameplayEffectExecute) 한 곳에서만 브로드캐스트한다.
+	DECLARE_MULTICAST_DELEGATE(FOnOutOfHealth);
+	FOnOutOfHealth OnOutOfHealth;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
@@ -33,6 +38,16 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Posture", ReplicatedUsing = OnRep_BasePostureRegenRate)
 	FGameplayAttributeData BasePostureRegenRate;
 	ATTRIBUTE_ACCESSORS_BASIC(UBlademasterAttributeSet, BasePostureRegenRate)
+
+	// 메타 어트리뷰트 — 데미지 GE가 여기 값을 넣으면 PostGameplayEffectExecute가 받아서 실제
+	// 체력·자세에 반영하고 0으로 리셋한다. 값 자체를 유지할 필요가 없어서 복제하지 않는다.
+	UPROPERTY(BlueprintReadOnly, Category = "Damage")
+	FGameplayAttributeData IncomingHealthDamage;
+	ATTRIBUTE_ACCESSORS_BASIC(UBlademasterAttributeSet, IncomingHealthDamage)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Damage")
+	FGameplayAttributeData IncomingPostureDamage;
+	ATTRIBUTE_ACCESSORS_BASIC(UBlademasterAttributeSet, IncomingPostureDamage)
 
 protected:
 	UFUNCTION()
