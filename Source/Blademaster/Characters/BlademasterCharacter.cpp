@@ -2,6 +2,7 @@
 
 #include "AbilitySystem/BlademasterAbilitySystemComponent.h"
 #include "AbilitySystem/BlademasterAttributeSet.h"
+#include "BlademasterCollisionChannels.h"
 #include "BlademasterGameplayTags.h"
 #include "Combat/BlademasterCombatComponent.h"
 #include "Combat/BlademasterWeaponTraceComponent.h"
@@ -81,6 +82,29 @@ UAbilitySystemComponent* ABlademasterCharacter::GetAbilitySystemComponent() cons
 FRotator ABlademasterCharacter::GetAttackDirection() const
 {
 	return GetActorRotation();
+}
+
+const TArray<TObjectPtr<UAnimMontage>>& ABlademasterCharacter::GetHitReactMontages(EBlademasterHitDirection Direction) const
+{
+	switch (Direction)
+	{
+	case EBlademasterHitDirection::Left:
+		return HitReactMontages_Left;
+	case EBlademasterHitDirection::Right:
+		return HitReactMontages_Right;
+	default:
+		return HitReactMontages_Front;
+	}
+}
+
+UAnimMontage* ABlademasterCharacter::GetDeathMontage(EBlademasterHitDirection Direction) const
+{
+	return Direction == EBlademasterHitDirection::Right ? DeathMontage_Right : DeathMontage_Left;
+}
+
+void ABlademasterCharacter::SetCombatCollisionEnabled(bool bEnabled)
+{
+	GetMesh()->SetCollisionResponseToChannel(BlademasterCollisionChannels::Weapon, bEnabled ? ECR_Overlap : ECR_Ignore);
 }
 
 void ABlademasterCharacter::BeginPlay()
