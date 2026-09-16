@@ -22,7 +22,7 @@ UBlademasterGameplayAbility_Combo::UBlademasterGameplayAbility_Combo()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 
-	SetAssetTags(FGameplayTagContainer(BlademasterGameplayTags::Ability_Attack));
+	SetAssetTags(FGameplayTagContainer(BlademasterGameplayTags::Ability_Action_Attack));
 	ActivationOwnedTags.AddTag(BlademasterGameplayTags::State_Attacking);
 }
 

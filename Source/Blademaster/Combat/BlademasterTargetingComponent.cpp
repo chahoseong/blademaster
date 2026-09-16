@@ -18,7 +18,9 @@ void UBlademasterTargetingComponent::TickComponent(float DeltaTime, ELevelTick T
 
 	// TWeakObjectPtr는 대상이 파괴되면 조용히 무효화될 뿐 이벤트를 주지 않는다.
 	// 락온 중에만(SetCurrentTarget에서 틱을 켬) 매 프레임 확인해 명시적으로 해제한다.
-	if (CurrentTarget.IsStale())
+	// 대상이 쓰러진 경우(State.Dead)도 파괴된 것과 같이 취급해 락온을 푼다.
+	const UTargetableComponent* CurrentTargetable = CurrentTarget.IsValid() ? CurrentTarget->FindComponentByClass<UTargetableComponent>() : nullptr;
+	if (CurrentTarget.IsStale() || (CurrentTargetable && !CurrentTargetable->IsTargetable()))
 	{
 		SetCurrentTarget(nullptr);
 	}
@@ -251,7 +253,8 @@ TArray<AActor*> UBlademasterTargetingComponent::GatherCandidates(const FVector& 
 	for (TActorIterator<AActor> It(World); It; ++It)
 	{
 		AActor* Candidate = *It;
-		if (Candidate == Owner || !Candidate->FindComponentByClass<UTargetableComponent>())
+		const UTargetableComponent* Targetable = Candidate == Owner ? nullptr : Candidate->FindComponentByClass<UTargetableComponent>();
+		if (!Targetable || !Targetable->IsTargetable())
 		{
 			continue;
 		}

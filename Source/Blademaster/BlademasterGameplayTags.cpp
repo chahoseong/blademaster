@@ -3,9 +3,15 @@
 namespace BlademasterGameplayTags
 {
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Attack, "InputTag.Attack", "공격 입력 액션에 붙는 태그. 어빌리티 스펙의 DynamicSpecSourceTags와 매칭해 입력을 전달한다.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Attack, "Ability.Attack", "공격류 어빌리티(콤보 등)를 식별하는 태그.");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action, "Ability.Action", "캐릭터가 선택해서 하는 어빌리티(공격 등)의 부모 태그. 피격 등 Reaction류에 끊기고 막힌다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action_Attack, "Ability.Action.Attack", "공격류 어빌리티(콤보 등)를 식별하는 태그.");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Hit, "Ability.Reaction.Hit", "피격 어빌리티(GA_Hit)를 식별하는 태그. Action류를 끊고 막는다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Attacking, "State.Attacking", "공격 어빌리티가 활성 상태인 동안 붙어 있다. 락온 추적 등 다른 시스템이 이 태그로 공격 중 여부를 판단한다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Dying, "State.Dying", "사망 몽타주 재생 중. 판정(충돌로 처리)·락온 후보에서 제외하는 기준이 된다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Dead, "State.Dead", "사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Input, "Attack.Window.Input", "선입력 구간. 이 구간에 눌린 공격 입력을 기억해둔다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Combo, "Attack.Window.Combo", "이어가기 구간. 시작 시 또는 구간 중 공격 입력이 있으면 다음 타로 넘어간다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Cancel, "Attack.Window.Cancel", "캔슬 구간. 이 태그가 있는 동안 다른 어빌리티가 이 공격을 끊을 수 있다(실제로 끊는 로직은 여기 없음).");
