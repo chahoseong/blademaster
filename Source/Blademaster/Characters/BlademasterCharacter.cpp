@@ -174,7 +174,7 @@ void ABlademasterCharacter::DrawOwnCombatDebugText() const
 	if (AbilitySystemComponent)
 	{
 		// Attack.Window의 하위 태그를 전부 나열한다 — 새 구간 태그가 생겨도 이 코드는 그대로다.
-		static const FGameplayTag WindowRootTag = FGameplayTag::RequestGameplayTag(FName("Attack.Window"));
+		const FGameplayTag WindowRootTag = BlademasterGameplayTags::Attack_Window;
 
 		FGameplayTagContainer OwnedTags;
 		AbilitySystemComponent->GetOwnedGameplayTags(OwnedTags);
