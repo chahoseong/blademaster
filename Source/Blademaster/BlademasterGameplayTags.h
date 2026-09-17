@@ -27,6 +27,8 @@ namespace BlademasterGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Dead);
 
 	// 한 타 안의 구간들. 몽타주의 UBlademasterAnimNotifyState_GameplayTag가 붙였다 뗀다.
+	// 부모 태그(Attack_Window)는 직접 붙이지 않고, 하위 구간을 한꺼번에 찾을 때만 쓴다.
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window_Input);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window_Combo);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window_Cancel);

@@ -12,6 +12,7 @@ namespace BlademasterGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Attacking, "State.Attacking", "공격 어빌리티가 활성 상태인 동안 붙어 있다. 락온 추적 등 다른 시스템이 이 태그로 공격 중 여부를 판단한다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Dying, "State.Dying", "사망 몽타주 재생 중. 판정(충돌로 처리)·락온 후보에서 제외하는 기준이 된다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Dead, "State.Dead", "사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window, "Attack.Window", "한 타 안의 구간 태그들의 부모. 직접 붙이지 않고 하위 구간을 한꺼번에 찾을 때 쓴다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Input, "Attack.Window.Input", "선입력 구간. 이 구간에 눌린 공격 입력을 기억해둔다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Combo, "Attack.Window.Combo", "이어가기 구간. 시작 시 또는 구간 중 공격 입력이 있으면 다음 타로 넘어간다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Cancel, "Attack.Window.Cancel", "캔슬 구간. 이 태그가 있는 동안 다른 어빌리티가 이 공격을 끊을 수 있다(실제로 끊는 로직은 여기 없음).");
