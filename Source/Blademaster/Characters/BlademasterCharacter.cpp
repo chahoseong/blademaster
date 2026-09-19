@@ -8,7 +8,6 @@
 #include "Combat/BlademasterWeaponTraceComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/PlayerController.h"
 #include "GameplayEffect.h"
 #include "GameplayTagContainer.h"
 #include "MotionWarpingComponent.h"
@@ -24,17 +23,12 @@ namespace
 
 ABlademasterCharacter::ABlademasterCharacter()
 {
-	SetNetUpdateFrequency(100.f);
-	SetMinNetUpdateFrequency(2.f);
-
 	AbilitySystemComponent = CreateDefaultSubobject<UBlademasterAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	AttributeSet = CreateDefaultSubobject<UBlademasterAttributeSet>(TEXT("AttributeSet"));
 
-	// 판정은 서버에서만 도는데, 화면에 안 보이면 뼈 위치가 갱신되지 않아 칼 소켓·피직스 바디가
-	// 제자리에 멈춘다. 그래서 서버·클라 구분 없이 항상 뼈를 갱신하도록 한다.
+	// 화면 밖에서도 판정이 돌아야 하는데, 화면에 안 보이면 뼈 위치가 갱신되지 않아 칼 소켓·피직스
+	// 바디가 제자리에 멈춘다. 그래서 항상 뼈를 갱신하도록 한다.
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 	GetMesh()->SetCollisionProfileName(FName(TEXT("BlademasterCharacterMesh")));
 
@@ -115,37 +109,22 @@ void ABlademasterCharacter::BeginPlay()
 	{
 		return;
 	}
-	
-	if (HasAuthority())
-	{
-		if (CombatComponent)
-		{
-			CombatComponent->GrantStartingAbilities();
-		}
-		
-		if (InitializeAttributesEffect)
-		{
-			FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-			EffectContext.AddSourceObject(this);
 
-			const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(InitializeAttributesEffect, 1.f, EffectContext);
-			if (SpecHandle.IsValid())
-			{
-				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-			}
-		}
+	if (CombatComponent)
+	{
+		CombatComponent->GrantStartingAbilities();
 	}
-}
 
-void ABlademasterCharacter::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	if (AbilitySystemComponent)
+	if (InitializeAttributesEffect)
 	{
-		AbilitySystemComponent->SetReplicationMode(Cast<APlayerController>(NewController)
-			? EGameplayEffectReplicationMode::Mixed
-			: EGameplayEffectReplicationMode::Minimal);
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(InitializeAttributesEffect, 1.f, EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
 	}
 }
 

@@ -15,7 +15,6 @@
 UBlademasterGameplayAbility_Hit::UBlademasterGameplayAbility_Hit()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
 
 	// 재생 중에 다시 맞으면 처음부터 다시 재생한다.
 	bRetriggerInstancedAbility = true;
@@ -92,8 +91,7 @@ void UBlademasterGameplayAbility_Hit::ActivateAbility(const FGameplayAbilitySpec
 
 	if (bKilled)
 	{
-		// TagOnly로 복제해야 다른 클라이언트의 락온 시스템도 이 태그를 볼 수 있다.
-		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Dying, 1, EGameplayTagReplicationState::TagOnly);
+		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Dying);
 
 		// 무기 채널 충돌을 꺼서 판정(#12) 자체에서 빠지게 한다. 부활할 때(GA_Respawn) 다시 켠다.
 		Victim->SetCombatCollisionEnabled(false);
@@ -164,8 +162,8 @@ void UBlademasterGameplayAbility_Hit::OnDeathMontageEnded()
 	if (UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo())
 	{
 		UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: State.Dying -> State.Dead 전환"), *GetNameSafe(GetAvatarActorFromActorInfo()));
-		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Dying, 1, EGameplayTagReplicationState::TagOnly);
-		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Dead, 1, EGameplayTagReplicationState::TagOnly);
+		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Dying);
+		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Dead);
 	}
 	else
 	{

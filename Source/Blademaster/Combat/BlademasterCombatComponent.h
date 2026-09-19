@@ -32,7 +32,7 @@ class BLADEMASTER_API UBlademasterCombatComponent : public UActorComponent
 public:
 	UBlademasterCombatComponent();
 
-	// 서버에서 액터 생애주기당 한 번만 호출한다. ASC의 InitAbilityActorInfo가 끝난 뒤 호출해야 한다.
+	// 액터 생애주기당 한 번만 호출한다. ASC의 InitAbilityActorInfo가 끝난 뒤 호출해야 한다.
 	void GrantStartingAbilities();
 
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);

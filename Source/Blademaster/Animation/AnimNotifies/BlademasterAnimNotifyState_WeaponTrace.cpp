@@ -6,21 +6,16 @@
 
 namespace
 {
-	UBlademasterWeaponTraceComponent* GetAuthoritativeWeaponTraceComponent(const USkeletalMeshComponent* MeshComp)
+	UBlademasterWeaponTraceComponent* GetWeaponTraceComponent(const USkeletalMeshComponent* MeshComp)
 	{
 		ABlademasterCharacter* Character = MeshComp ? Cast<ABlademasterCharacter>(MeshComp->GetOwner()) : nullptr;
-		if (!Character || !Character->HasAuthority())
-		{
-			return nullptr;
-		}
-
-		return Character->GetWeaponTraceComponent();
+		return Character ? Character->GetWeaponTraceComponent() : nullptr;
 	}
 }
 
 void UBlademasterAnimNotifyState_WeaponTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-	if (UBlademasterWeaponTraceComponent* Component = GetAuthoritativeWeaponTraceComponent(MeshComp))
+	if (UBlademasterWeaponTraceComponent* Component = GetWeaponTraceComponent(MeshComp))
 	{
 		Component->BeginTrace();
 	}
@@ -28,7 +23,7 @@ void UBlademasterAnimNotifyState_WeaponTrace::NotifyBegin(USkeletalMeshComponent
 
 void UBlademasterAnimNotifyState_WeaponTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
-	if (UBlademasterWeaponTraceComponent* Component = GetAuthoritativeWeaponTraceComponent(MeshComp))
+	if (UBlademasterWeaponTraceComponent* Component = GetWeaponTraceComponent(MeshComp))
 	{
 		Component->TickTrace();
 	}
@@ -36,7 +31,7 @@ void UBlademasterAnimNotifyState_WeaponTrace::NotifyTick(USkeletalMeshComponent*
 
 void UBlademasterAnimNotifyState_WeaponTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	if (UBlademasterWeaponTraceComponent* Component = GetAuthoritativeWeaponTraceComponent(MeshComp))
+	if (UBlademasterWeaponTraceComponent* Component = GetWeaponTraceComponent(MeshComp))
 	{
 		Component->EndTrace();
 	}

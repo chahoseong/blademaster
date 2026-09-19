@@ -10,7 +10,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnWeaponTraceHit, const FHitResult&);
 // 장착 무기(칼)의 궤적을 스윕해서 순수 물리 판정(누구를, 어디를, 어느 부위를, 어느 방향으로
 // 맞혔는지)만 한다. 어떤 공격인지는 모른다 — 그건 이미 알고 있는 콤보 어빌리티가
 // 이 컴포넌트의 결과에 덧붙인다. Begin/Tick/EndTrace는 몽타주의 AnimNotifyState가 직접 호출한다.
-// 판정은 서버 전용이라고 가정한다 — 호출하는 쪽(노티파이)이 권한을 확인한다.
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class BLADEMASTER_API UBlademasterWeaponTraceComponent : public UActorComponent
 {

@@ -11,9 +11,6 @@ UBlademasterGameplayAbility_Respawn::UBlademasterGameplayAbility_Respawn()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-	// 패시브 어빌리티라 클라이언트에서 돌 이유가 없다.
-	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
-
 	FAbilityTriggerData TriggerData;
 	TriggerData.TriggerTag = BlademasterGameplayTags::State_Dead;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::OwnedTagAdded;
@@ -67,7 +64,7 @@ void UBlademasterGameplayAbility_Respawn::OnRespawnDelayFinished()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Dead, 1, EGameplayTagReplicationState::TagOnly);
+		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Dead);
 	}
 
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
