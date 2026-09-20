@@ -7,17 +7,21 @@ namespace BlademasterGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action, "Ability.Action", "캐릭터가 선택해서 하는 어빌리티(공격 등)의 부모 태그. 피격 등 Reaction류에 끊기고 막힌다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action_Attack, "Ability.Action.Attack", "공격류 어빌리티(콤보 등)를 식별하는 태그.");
 
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Hit, "Ability.Reaction.Hit", "피격 어빌리티(GA_Hit)를 식별하는 태그. Action류를 끊고 막는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Hit, "Ability.Reaction.Hit", "피격 반응 어빌리티(GA_HitReact)를 식별하는 태그. Action류를 끊고 막는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Death, "Ability.Reaction.Death", "사망 어빌리티(GA_Death)를 식별하는 태그. Action류를 끊고 막는다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Attacking, "State.Attacking", "공격 어빌리티가 활성 상태인 동안 붙어 있다. 락온 추적 등 다른 시스템이 이 태그로 공격 중 여부를 판단한다.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Dying, "State.Dying", "사망 몽타주 재생 중. 판정(충돌로 처리)·락온 후보에서 제외하는 기준이 된다.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Dead, "State.Dead", "사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death, "State.Death", "죽었거나 죽어가는 중. 하위 상태가 공유하는 성질(판정 제외, 락온 후보 제외)을 한 번에 질의하는 부모 태그.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death_Dying, "State.Death.Dying", "사망 몽타주 재생 중.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death_Dead, "State.Death.Dead", "사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window, "Attack.Window", "한 타 안의 구간 태그들의 부모. 직접 붙이지 않고 하위 구간을 한꺼번에 찾을 때 쓴다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Input, "Attack.Window.Input", "선입력 구간. 이 구간에 눌린 공격 입력을 기억해둔다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Combo, "Attack.Window.Combo", "이어가기 구간. 시작 시 또는 구간 중 공격 입력이 있으면 다음 타로 넘어간다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Cancel, "Attack.Window.Cancel", "캔슬 구간. 이 태그가 있는 동안 다른 어빌리티가 이 공격을 끊을 수 있다(실제로 끊는 로직은 여기 없음).");
 
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_WeaponHit, "GameplayEvent.WeaponHit", "칼 판정이 대상을 맞혔을 때 그 대상에게 보내는 이벤트. 피격 어빌리티가 AbilityTriggers로 듣는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Weapon_Hit, "GameplayEvent.Weapon.Hit", "칼 판정이 대상을 맞혔을 때 그 대상에게 보내는 이벤트. 맞은 쪽의 CombatComponent가 받는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Reaction_Hit, "GameplayEvent.Reaction.Hit", "CombatComponent가 타격을 처리한 결과가 피격일 때 자신에게 보내는 이벤트. GA_HitReact가 듣는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Reaction_Death, "GameplayEvent.Reaction.Death", "CombatComponent가 타격을 처리한 결과가 사망일 때 자신에게 보내는 이벤트. GA_Death가 듣는다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Damage_Health, "SetByCaller.Damage.Health", "데미지 GE가 체력 메타 어트리뷰트에 넣을 값의 SetByCaller 태그.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Damage_Posture, "SetByCaller.Damage.Posture", "데미지 GE가 자세 메타 어트리뷰트에 넣을 값의 SetByCaller 태그.");

@@ -22,7 +22,7 @@ UBlademasterGameplayAbility_Hit::UBlademasterGameplayAbility_Hit()
 	SetAssetTags(FGameplayTagContainer(BlademasterGameplayTags::Ability_Reaction_Hit));
 
 	FAbilityTriggerData TriggerData;
-	TriggerData.TriggerTag = BlademasterGameplayTags::GameplayEvent_WeaponHit;
+	TriggerData.TriggerTag = BlademasterGameplayTags::GameplayEvent_Weapon_Hit;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 	AbilityTriggers.Add(TriggerData);
 }
@@ -37,8 +37,8 @@ void UBlademasterGameplayAbility_Hit::ActivateAbility(const FGameplayAbilitySpec
 
 	// 이미 죽어가는 중이거나 죽어있으면(사망 몽타주 재생 중 포함) 트리거 자체를 무시한다.
 	// 판정(#12)은 죽으면 무기 채널 충돌을 꺼서 걸러내지만, 그 전에 날아온 이벤트에 대한 방어다.
-	if (AbilitySystemComponent && (AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Dying)
-		|| AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Dead)))
+	if (AbilitySystemComponent && (AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Death_Dying)
+		|| AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Death_Dead)))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
@@ -91,7 +91,7 @@ void UBlademasterGameplayAbility_Hit::ActivateAbility(const FGameplayAbilitySpec
 
 	if (bKilled)
 	{
-		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Dying);
+		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Death_Dying);
 
 		// 무기 채널 충돌을 꺼서 판정(#12) 자체에서 빠지게 한다. 부활할 때(GA_Respawn) 다시 켠다.
 		Victim->SetCombatCollisionEnabled(false);
@@ -162,8 +162,8 @@ void UBlademasterGameplayAbility_Hit::OnDeathMontageEnded()
 	if (UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo())
 	{
 		UE_LOG(LogBlademasterCombat, Verbose, TEXT("%s: State.Dying -> State.Dead 전환"), *GetNameSafe(GetAvatarActorFromActorInfo()));
-		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Dying);
-		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Dead);
+		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Death_Dying);
+		AbilitySystemComponent->AddLooseGameplayTag(BlademasterGameplayTags::State_Death_Dead);
 	}
 	else
 	{

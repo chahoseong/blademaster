@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AbilitySystemInterface.h"
+#include "Combat/BlademasterHitDirection.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "BlademasterCharacter.generated.h"
@@ -13,15 +14,6 @@ class UBlademasterWeaponTraceComponent;
 class UGameplayEffect;
 class UMotionWarpingComponent;
 class UStaticMeshComponent;
-
-// 판정이 넘겨준 칼의 이동 방향을 피격자 기준 좌/우/정면으로 바꾼 값. 피격·사망 몽타주 선택에 쓰인다.
-UENUM(BlueprintType)
-enum class EBlademasterHitDirection : uint8
-{
-	Front,
-	Left,
-	Right
-};
 
 UCLASS()
 class BLADEMASTER_API ABlademasterCharacter : public ACharacter, public IAbilitySystemInterface

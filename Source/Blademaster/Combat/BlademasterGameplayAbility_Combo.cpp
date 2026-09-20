@@ -184,11 +184,11 @@ void UBlademasterGameplayAbility_Combo::OnWeaponHit(const FHitResult& Hit)
 	}
 
 	// 데미지 GameplayEffect 자체는 여기서 만들지 않는다 — 이 이벤트가 하는 일은 "공격자가 결정한
-	// 공격 데이터를 들고 있으니, 맞은 대상의 피격 어빌리티가 알아서 처리하라"는 통지까지다.
+	// 공격 데이터를 들고 있으니, 맞은 대상이 알아서 처리하라"는 통지까지다.
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddHitResult(Hit);
 
-	if (FBlademasterGameplayEffectContext* BlademasterContext = static_cast<FBlademasterGameplayEffectContext*>(EffectContext.Get()))
+	if (FBlademasterGameplayEffectContext* BlademasterContext = FBlademasterGameplayEffectContext::FromHandle(EffectContext))
 	{
 		const FBlademasterAttackDefinition& AttackDefinition = ComboDefinition->Attacks[CurrentAttackIndex];
 		BlademasterContext->HealthDamage = AttackDefinition.HealthDamage;
@@ -196,7 +196,7 @@ void UBlademasterGameplayAbility_Combo::OnWeaponHit(const FHitResult& Hit)
 	}
 
 	FGameplayEventData Payload;
-	Payload.EventTag = BlademasterGameplayTags::GameplayEvent_WeaponHit;
+	Payload.EventTag = BlademasterGameplayTags::GameplayEvent_Weapon_Hit;
 	Payload.Instigator = Avatar;
 	Payload.Target = HitActor;
 	Payload.ContextHandle = EffectContext;

@@ -11,6 +11,6 @@ class BLADEMASTER_API UTargetableComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	// 지금 락온 후보로 유효한지. 소유 액터가 쓰러진 상태(State.Dead)면 false.
+	// 지금 락온 후보로 유효한지. 소유 액터가 쓰러진 상태(State.Death)면 false.
 	bool IsTargetable() const;
 };

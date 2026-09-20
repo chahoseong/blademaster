@@ -13,6 +13,5 @@ bool UTargetableComponent::IsTargetable() const
 		return false;
 	}
 
-	return !AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Dying)
-		&& !AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Dead);
+	return !AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Death);
 }

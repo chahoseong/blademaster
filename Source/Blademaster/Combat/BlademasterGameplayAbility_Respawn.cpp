@@ -12,7 +12,7 @@ UBlademasterGameplayAbility_Respawn::UBlademasterGameplayAbility_Respawn()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	FAbilityTriggerData TriggerData;
-	TriggerData.TriggerTag = BlademasterGameplayTags::State_Dead;
+	TriggerData.TriggerTag = BlademasterGameplayTags::State_Death_Dead;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::OwnedTagAdded;
 	AbilityTriggers.Add(TriggerData);
 }
@@ -64,7 +64,7 @@ void UBlademasterGameplayAbility_Respawn::OnRespawnDelayFinished()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Dead);
+		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Death_Dead);
 	}
 
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
