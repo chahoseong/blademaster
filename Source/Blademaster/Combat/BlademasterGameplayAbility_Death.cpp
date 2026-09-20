@@ -50,11 +50,10 @@ void UBlademasterGameplayAbility_Death::ActivateAbility(const FGameplayAbilitySp
 		return;
 	}
 
-	// 어빌리티가 끝나도 몽타주가 끊기지 않게 한다 — 쓰러진 자세를 계속 유지해야 한다.
-	// 자동 블렌드 아웃을 끈 몽타주라 "재생 끝남" 델리게이트 자체가 절대 안 온다 — 그래서
-	// 완료 콜백을 기다리는 대신, 몽타주 길이만큼 직접 타이머를 걸어 State.Death.Dead로 넘어간다.
-	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this, NAME_None, DeathMontage, 1.f, NAME_None, /*bStopWhenAbilityEnds=*/ false);
+	// 자동 블렌드 아웃을 끈 몽타주라 쓰러진 자세를 유지하고 "재생 끝남" 델리게이트는 오지 않는다 —
+	// 그래서 완료 콜백을 기다리는 대신, 몽타주 길이만큼 직접 타이머를 걸어 State.Death.Dead로 넘어간다.
+	// 몽타주는 어빌리티가 끝날 때 함께 내려간다(bStopWhenAbilityEnds 기본값). 블렌드 아웃 시간은 몽타주 애셋 값이다.
+	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, DeathMontage);
 	MontageTask->ReadyForActivation();
 
 	const float DeathMontageLength = DeathMontage->GetPlayLength();
@@ -64,6 +63,18 @@ void UBlademasterGameplayAbility_Death::ActivateAbility(const FGameplayAbilitySp
 	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, DeathMontageLength);
 	DelayTask->OnFinish.AddDynamic(this, &UBlademasterGameplayAbility_Death::OnDeathMontageEnded);
 	DelayTask->ReadyForActivation();
+}
+
+void UBlademasterGameplayAbility_Death::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	// 어느 단계에서 끝나든 태그가 남지 않게 둘 다 걷어낸다. 보유하지 않은 태그를 제거해도 보유 수는 음수가 되지 않는다.
+	if (UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo())
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Death_Dying);
+		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Death_Dead);
+	}
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UBlademasterGameplayAbility_Death::OnDeathMontageEnded()
@@ -81,5 +92,5 @@ void UBlademasterGameplayAbility_Death::OnDeathMontageEnded()
 		UE_LOG(LogBlademasterCombat, Warning, TEXT("OnDeathMontageEnded: AbilitySystemComponent를 못 찾음"));
 	}
 
-	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
+	// 여기서 EndAbility를 부르지 않는다 — 되살리기가 취소할 때까지 사망 상태 전체 동안 활성으로 남는다.
 }

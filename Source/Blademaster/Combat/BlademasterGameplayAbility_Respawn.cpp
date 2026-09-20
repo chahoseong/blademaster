@@ -45,16 +45,10 @@ void UBlademasterGameplayAbility_Respawn::OnRespawnDelayFinished()
 		Character->SetCombatCollisionEnabled(true);
 	}
 
-	if (AbilitySystemComponent)
-	{
-		// 사망 몽타주는 자동 블렌드 아웃을 꺼서 끝 자세를 유지하므로, 몽타주 자체가 "재생 중"
-		// 상태로 계속 남아있다. 명시적으로 내려야 원래 자세(로코모션)로 돌아온다.
-		AbilitySystemComponent->CurrentMontageStop(0.25f);
-	}
-
 	if (AbilitySystemComponent && InitializeAttributesEffect)
 	{
-		const FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(Character);
 		const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(InitializeAttributesEffect, 1.f, EffectContext);
 		if (SpecHandle.IsValid())
 		{
@@ -62,9 +56,13 @@ void UBlademasterGameplayAbility_Respawn::OnRespawnDelayFinished()
 		}
 	}
 
+	// 사망 상태의 소유자인 GA_Death를 취소한다. 사망 태그와 사망 몽타주는 GA_Death가 끝날 때 정리되고,
+	// 몽타주가 내려가면 로코모션으로 돌아온다. 활성화 시점에 발동하는 CancelAbilitiesWithTag 선언으로는
+	// 사망 순간에 바로 취소되므로, 대기가 끝난 이 시점에 명령형으로 한 번 취소한다.
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->RemoveLooseGameplayTag(BlademasterGameplayTags::State_Death_Dead);
+		const FGameplayTagContainer DeathTags(BlademasterGameplayTags::Ability_Reaction_Death);
+		AbilitySystemComponent->CancelAbilities(&DeathTags, nullptr, this);
 	}
 
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, false);
