@@ -48,7 +48,7 @@ public:
 	// 부활 시 체력·자세를 되돌리는 데 재사용한다(GA_Respawn).
 	TSubclassOf<UGameplayEffect> GetInitializeAttributesEffect() const { return InitializeAttributesEffect; }
 
-	// 죽을 때 꺼서(GA_Hit) 무기 판정에서 빠지게 하고, 부활할 때 다시 켠다(GA_Respawn).
+	// 죽을 때 꺼서(GA_Death) 무기 판정에서 빠지게 하고, 부활할 때 다시 켠다(GA_Respawn).
 	// 메시의 Weapon 채널 반응만 바꾼다 — 이동·환경 충돌 등 다른 채널은 그대로다.
 	void SetCombatCollisionEnabled(bool bEnabled);
 

@@ -113,6 +113,7 @@ void ABlademasterCharacter::BeginPlay()
 	if (CombatComponent)
 	{
 		CombatComponent->GrantStartingAbilities();
+		CombatComponent->StartListeningForHits();
 	}
 
 	if (InitializeAttributesEffect)

@@ -1,8 +1,13 @@
 #include "Combat/BlademasterCombatComponent.h"
 
+#include "AbilitySystem/BlademasterAttributeSet.h"
+#include "AbilitySystem/BlademasterGameplayEffectContext.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Abilities/GameplayAbility.h"
+#include "BlademasterGameplayTags.h"
+#include "BlademasterLogChannels.h"
+#include "GameplayEffect.h"
 
 UBlademasterCombatComponent::UBlademasterCombatComponent()
 {
@@ -30,6 +35,126 @@ void UBlademasterCombatComponent::GrantStartingAbilities()
 		Spec.GetDynamicSpecSourceTags().AddTag(Grant.InputTag);
 		AbilitySystemComponent->GiveAbility(Spec);
 	}
+}
+
+void UBlademasterCombatComponent::StartListeningForHits()
+{
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	if (!AbilitySystemComponent || WeaponHitEventHandle.IsValid())
+	{
+		return;
+	}
+
+	WeaponHitEventHandle = AbilitySystemComponent->AddGameplayEventTagContainerDelegate(
+		FGameplayTagContainer(BlademasterGameplayTags::GameplayEvent_Weapon_Hit),
+		FGameplayEventTagMulticastDelegate::FDelegate::CreateUObject(this, &UBlademasterCombatComponent::OnWeaponHitEvent));
+}
+
+void UBlademasterCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (WeaponHitEventHandle.IsValid())
+	{
+		const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+		if (UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr)
+		{
+			AbilitySystemComponent->RemoveGameplayEventTagContainerDelegate(
+				FGameplayTagContainer(BlademasterGameplayTags::GameplayEvent_Weapon_Hit), WeaponHitEventHandle);
+		}
+		WeaponHitEventHandle.Reset();
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
+{
+	const IAbilitySystemInterface* VictimInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	UAbilitySystemComponent* VictimAbilitySystemComponent = VictimInterface ? VictimInterface->GetAbilitySystemComponent() : nullptr;
+	if (!Payload || !VictimAbilitySystemComponent)
+	{
+		return;
+	}
+
+	// 이미 죽었거나 죽어가는 중이면 무시한다. 판정은 죽으면 무기 채널 충돌을 꺼서 걸러내지만,
+	// 그 전에 날아온 이벤트에 대한 방어다.
+	if (VictimAbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Death))
+	{
+		return;
+	}
+
+	// ① 막기·회피가 끼어들 자리 — 지금은 비워둔다(M2).
+
+	const IAbilitySystemInterface* AttackerInterface = Cast<IAbilitySystemInterface>(Payload->Instigator.Get());
+	UAbilitySystemComponent* AttackerAbilitySystemComponent = AttackerInterface ? AttackerInterface->GetAbilitySystemComponent() : nullptr;
+	const UBlademasterAttributeSet* AttributeSet = VictimAbilitySystemComponent->GetSet<UBlademasterAttributeSet>();
+	FGameplayEffectContextHandle ContextHandle = Payload->ContextHandle;
+	FBlademasterGameplayEffectContext* Context = FBlademasterGameplayEffectContext::FromHandle(ContextHandle);
+	const FHitResult* Hit = ContextHandle.GetHitResult();
+
+	if (!AttackerAbilitySystemComponent || !AttributeSet || !Context || !Hit)
+	{
+		return;
+	}
+
+	if (!DamageEffectClass)
+	{
+		UE_LOG(LogBlademasterCombat, Warning, TEXT("%s: DamageEffectClass가 지정되지 않아 타격을 처리하지 못한다"), *GetNameSafe(GetOwner()));
+		return;
+	}
+
+	// 피격 방향은 반응 어빌리티가 몽타주를 고를 때 읽도록 컨텍스트에 기록한다. 파생 이벤트도 이 컨텍스트를 그대로 쓴다.
+	const EBlademasterHitDirection Direction = ComputeHitDirection(*Hit, GetOwner()->GetActorRightVector());
+	Context->HitDirection = Direction;
+
+	const float OldHealth = AttributeSet->GetHealth();
+	const float OldPosture = AttributeSet->GetPosture();
+
+	// ② 체력·자세를 깎는다. 스펙은 공격자의 ASC로 만든다 — 공격 데이터(데미지 값)는 공격자가
+	// 이벤트에 실어 보낸 컨텍스트에 이미 있다. 인스턴트 GE는 동기적으로 실행되므로 적용 직후 값이 확정된다.
+	const FGameplayEffectSpecHandle SpecHandle = AttackerAbilitySystemComponent->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
+	if (!SpecHandle.IsValid())
+	{
+		return;
+	}
+
+	SpecHandle.Data->SetSetByCallerMagnitude(BlademasterGameplayTags::SetByCaller_Damage_Health, Context->HealthDamage);
+	SpecHandle.Data->SetSetByCallerMagnitude(BlademasterGameplayTags::SetByCaller_Damage_Posture, Context->PostureDamage);
+	VictimAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+	// ③ 확정된 체력으로 결과를 정하고, 그 결과를 이름으로 지정한 이벤트로 알린다.
+	const bool bKilled = AttributeSet->GetHealth() <= 0.f;
+	const FGameplayTag ReactionTag = bKilled ? BlademasterGameplayTags::GameplayEvent_Reaction_Death : BlademasterGameplayTags::GameplayEvent_Reaction_Hit;
+
+	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 타격 해석 — 방향 %s, 결과 %s (체력 %.1f / 자세 %.1f 감소)"),
+		*GetNameSafe(GetOwner()), *UEnum::GetValueAsString(Direction), bKilled ? TEXT("사망") : TEXT("피격"),
+		OldHealth - AttributeSet->GetHealth(), OldPosture - AttributeSet->GetPosture());
+
+	FGameplayEventData ReactionPayload = *Payload;
+	ReactionPayload.EventTag = ReactionTag;
+	if (VictimAbilitySystemComponent->HandleGameplayEvent(ReactionTag, &ReactionPayload) == 0)
+	{
+		UE_LOG(LogBlademasterCombat, Warning, TEXT("%s: %s를 받아 활성화된 어빌리티가 없다. StartingAbilities를 확인할 것"),
+			*GetNameSafe(GetOwner()), *ReactionTag.ToString());
+	}
+}
+
+EBlademasterHitDirection UBlademasterCombatComponent::ComputeHitDirection(const FHitResult& Hit, const FVector& VictimRight)
+{
+	const FVector SwingDirection = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal();
+	if (SwingDirection.IsNearlyZero())
+	{
+		return EBlademasterHitDirection::Front;
+	}
+
+	constexpr float FrontDotThreshold = 0.3f;
+	const float RightDot = FVector::DotProduct(SwingDirection, VictimRight);
+	if (FMath::Abs(RightDot) < FrontDotThreshold)
+	{
+		return EBlademasterHitDirection::Front;
+	}
+
+	return RightDot > 0.f ? EBlademasterHitDirection::Left : EBlademasterHitDirection::Right;
 }
 
 void UBlademasterCombatComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
