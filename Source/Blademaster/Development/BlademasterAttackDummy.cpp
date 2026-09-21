@@ -15,6 +15,7 @@
 
 #if !UE_BUILD_SHIPPING
 #include "BlademasterDebug.h"
+#include "DrawDebugHelpers.h"
 #endif
 
 namespace
@@ -61,17 +62,20 @@ void ABlademasterAttackDummy::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	RefreshTriggerIfRadiusChanged();
+
 	const float Now = GetWorld()->GetTimeSeconds();
 	ABlademasterCharacter* Target = GetCurrentTarget();
 
 	if (bTelegraphing)
 	{
-		if (Target != TelegraphTarget.Get())
+		if (!bActive)
 		{
-			// 예고하던 대상이 트리거를 벗어났다 — 이 주기는 타격하지 않는다.
-			UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 예고 취소 — 대상 %s가 트리거를 벗어났다"), *GetName(), *GetNameSafe(TelegraphTarget.Get()));
-			bTelegraphing = false;
-			TelegraphTarget.Reset();
+			CancelTelegraph(TEXT("장치가 비활성화됐다"));
+		}
+		else if (Target != TelegraphTarget.Get())
+		{
+			CancelTelegraph(TEXT("대상이 트리거를 벗어났다"));
 		}
 		else if (Now - TelegraphStartTime >= TelegraphDuration)
 		{
@@ -82,13 +86,14 @@ void ABlademasterAttackDummy::Tick(float DeltaSeconds)
 		}
 	}
 
-	if (!bTelegraphing && Target && Now >= NextTelegraphTime)
+	if (bActive && !bTelegraphing && Target && Now >= NextTelegraphTime)
 	{
 		StartTelegraph(Target, Now);
 	}
 
 #if !UE_BUILD_SHIPPING
 	DrawAttributeText();
+	DrawTelegraph(Now);
 #endif
 }
 
@@ -100,6 +105,8 @@ UAbilitySystemComponent* ABlademasterAttackDummy::GetAbilitySystemComponent() co
 void ABlademasterAttackDummy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AppliedTriggerRadius = TargetTrigger->GetUnscaledSphereRadius();
 
 	TargetTrigger->OnComponentBeginOverlap.AddDynamic(this, &ABlademasterAttackDummy::OnTargetTriggerBeginOverlap);
 	TargetTrigger->OnComponentEndOverlap.AddDynamic(this, &ABlademasterAttackDummy::OnTargetTriggerEndOverlap);
@@ -152,6 +159,16 @@ void ABlademasterAttackDummy::AddTargetCandidate(AActor* Actor)
 	}
 }
 
+void ABlademasterAttackDummy::RefreshTriggerIfRadiusChanged()
+{
+	const float Radius = TargetTrigger->GetUnscaledSphereRadius();
+	if (Radius != AppliedTriggerRadius)
+	{
+		AppliedTriggerRadius = Radius;
+		TargetTrigger->SetSphereRadius(Radius, true);
+	}
+}
+
 ABlademasterCharacter* ABlademasterAttackDummy::GetCurrentTarget()
 {
 	TargetCandidates.RemoveAll([](const TWeakObjectPtr<ABlademasterCharacter>& Candidate) { return !Candidate.IsValid(); });
@@ -166,6 +183,13 @@ void ABlademasterAttackDummy::StartTelegraph(ABlademasterCharacter* Target, floa
 
 	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 예고 시작 — 대상 %s, 거리 %.0f, 예고 시간 %.2f초"),
 		*GetName(), *GetNameSafe(Target), FVector::Dist2D(GetActorLocation(), Target->GetActorLocation()), TelegraphDuration);
+}
+
+void ABlademasterAttackDummy::CancelTelegraph(const TCHAR* Reason)
+{
+	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 예고 취소 — %s (대상 %s)"), *GetName(), Reason, *GetNameSafe(TelegraphTarget.Get()));
+	bTelegraphing = false;
+	TelegraphTarget.Reset();
 }
 
 void ABlademasterAttackDummy::Strike(ABlademasterCharacter* Target, float ElapsedSinceTelegraph)
@@ -191,6 +215,11 @@ void ABlademasterAttackDummy::Strike(ABlademasterCharacter* Target, float Elapse
 		BlademasterCollisionChannels::Weapon, FCollisionShape::MakeSphere(SweepRadius), QueryParams);
 
 	const FHitResult* TargetHit = HitResults.FindByPredicate([Target](const FHitResult& Hit) { return Hit.GetActor() == Target; });
+
+#if !UE_BUILD_SHIPPING
+	DrawStrike(SweepStart, SweepEnd, TargetHit);
+#endif
+
 	if (!TargetHit)
 	{
 		UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 타격 — 예고 후 %.3f초, 대상 %s를 맞히지 못했다"), *GetName(), ElapsedSinceTelegraph, *GetNameSafe(Target));
@@ -230,5 +259,54 @@ void ABlademasterAttackDummy::DrawAttributeText() const
 
 	BlademasterDebug::DrawDebugTextLine(this, 0, FString::Printf(TEXT("HP: %.0f / %.0f"), RegisteredSet->GetHealth(), RegisteredSet->GetMaxHealth()));
 	BlademasterDebug::DrawDebugTextLine(this, 1, FString::Printf(TEXT("Posture: %.0f / %.0f"), RegisteredSet->GetPosture(), RegisteredSet->GetMaxPosture()));
+}
+
+void ABlademasterAttackDummy::DrawTelegraph(float Now) const
+{
+	// 체력·자세 두 줄 위에 한 단계 크게 그린다.
+	const FVector StatusTextOffset(0.f, 0.f, 150.f);
+	constexpr float StatusFontScale = 1.5f;
+
+	if (!bActive)
+	{
+		DrawDebugString(GetWorld(), StatusTextOffset, TEXT("비활성"), const_cast<ABlademasterAttackDummy*>(this), FColor::Silver, 0.f, true, StatusFontScale);
+		return;
+	}
+
+	const ABlademasterCharacter* Target = TelegraphTarget.Get();
+	if (!bTelegraphing || !Target)
+	{
+		return;
+	}
+
+	const float Remaining = FMath::Max(0.f, TelegraphDuration - (Now - TelegraphStartTime));
+	const float Progress = TelegraphDuration > 0.f ? FMath::Clamp(1.f - Remaining / TelegraphDuration, 0.f, 1.f) : 1.f;
+	const FColor Color = FLinearColor::LerpUsingHSV(FLinearColor::Yellow, FLinearColor::Red, Progress).ToFColor(true);
+
+	DrawDebugString(GetWorld(), StatusTextOffset, FString::Printf(TEXT("공격까지 %.1f초"), Remaining),
+		const_cast<ABlademasterAttackDummy*>(this), Color, 0.f, true, StatusFontScale);
+
+	// 지금 타격하면 스윕할 선. 대상이 움직이면 따라간다. 몸에 가려지지 않게 전경에 그린다.
+	FVector SweepStart;
+	FVector SweepEnd;
+	if (ComputeSweepSegment(GetActorLocation(), Target->GetActorLocation(), SweepDirection, SweepLength, SweepStart, SweepEnd))
+	{
+		DrawDebugDirectionalArrow(GetWorld(), SweepStart, SweepEnd, 30.f, Color, false, -1.f, SDPG_Foreground, 2.f);
+	}
+}
+
+void ABlademasterAttackDummy::DrawStrike(const FVector& SweepStart, const FVector& SweepEnd, const FHitResult* TargetHit) const
+{
+	constexpr float Lifetime = 1.f;
+	const FColor Color = TargetHit ? FColor::Red : FColor::Silver;
+
+	DrawDebugDirectionalArrow(GetWorld(), SweepStart, SweepEnd, 40.f, Color, false, Lifetime, SDPG_Foreground, 4.f);
+	DrawDebugSphere(GetWorld(), SweepStart, SweepRadius, 12, Color, false, Lifetime, SDPG_Foreground);
+	DrawDebugSphere(GetWorld(), SweepEnd, SweepRadius, 12, Color, false, Lifetime, SDPG_Foreground);
+
+	if (TargetHit)
+	{
+		DrawDebugSphere(GetWorld(), TargetHit->ImpactPoint, 8.f, 12, FColor::Red, false, Lifetime, SDPG_Foreground, 2.f);
+	}
 }
 #endif

@@ -62,6 +62,10 @@ protected:
 
 	// 아래 값들은 매 틱 읽으므로 실험 중에 바꾸면 바로 적용된다.
 
+	// 끄면 예고도 타격도 하지 않는다. 예고 중에 끄면 그 주기를 취소한다.
+	UPROPERTY(EditAnywhere, Category = "AttackDummy")
+	bool bActive = true;
+
 	// 타격이 끝난 뒤 다음 예고를 시작할 때까지 쉬는 시간(초).
 	UPROPERTY(EditAnywhere, Category = "AttackDummy", meta = (ClampMin = "0", Units = "s"))
 	float AttackInterval = 2.f;
@@ -97,13 +101,20 @@ private:
 
 	void AddTargetCandidate(AActor* Actor);
 
+	// 실험 중 트리거 반경을 바꾸면 모양은 바로 바뀌지만 겹침은 무언가 움직여야 갱신된다.
+	// 반경이 바뀐 틱에 겹침을 다시 계산해 서 있는 대상에게도 바로 적용한다.
+	void RefreshTriggerIfRadiusChanged();
+
 	// 트리거에 먼저 들어온 순서로 첫 번째 유효한 후보.
 	ABlademasterCharacter* GetCurrentTarget();
 
 	void StartTelegraph(ABlademasterCharacter* Target, float Now);
+	void CancelTelegraph(const TCHAR* Reason);
 	void Strike(ABlademasterCharacter* Target, float ElapsedSinceTelegraph);
 
 	TArray<TWeakObjectPtr<ABlademasterCharacter>> TargetCandidates;
+
+	float AppliedTriggerRadius = 0.f;
 
 	bool bTelegraphing = false;
 	float TelegraphStartTime = 0.f;
@@ -113,5 +124,11 @@ private:
 #if !UE_BUILD_SHIPPING
 	// ASC에 등록된 AttributeSet에서 체력·자세를 읽어 장치 위에 그린다.
 	void DrawAttributeText() const;
+
+	// 예고 중: 장치 위에 남은 시간을, 대상 위에 지금 타격하면 스윕할 선을 그린다. 꺼져 있으면 비활성을 표시한다.
+	void DrawTelegraph(float Now) const;
+
+	// 타격 순간의 스윕 궤적을 잠시 남긴다. 맞으면 빨강과 맞은 지점, 빗나가면 회색.
+	void DrawStrike(const FVector& SweepStart, const FVector& SweepEnd, const FHitResult* TargetHit) const;
 #endif
 };
