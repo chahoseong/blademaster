@@ -36,6 +36,8 @@
 - 체력 비율이 높을 때의 속도가 낮을 때보다 빠르다.
 - 체력 비율이 같으면 속도도 같다.
 - 체력이 바닥이어도 속도는 0보다 크다. 회복이 완전히 멈추지는 않는다.
+- 속도 = Lerp(`MinPostureRegenRate`, `BasePostureRegenRate`, h ^ `PostureRegenHealthExponent`).
+  h는 최대 체력에 대한 현재 체력의 비율이다.
 
 ## 4. 파라미터
 
@@ -43,8 +45,8 @@
 |---|---|
 | `MaxPosture` | 자세 최대치이자 시작값 |
 | `BasePostureRegenRate` | 체력이 가득할 때 자세가 회복되는 속도 |
-| `PostureRegenHealthScale` | 체력 잔량이 회복 속도에 미치는 영향의 크기 (R-4) |
-| `MinPostureRegenRatio` | 체력이 바닥일 때 남는 회복 속도의 비율. 0보다 크다 (R-4) |
+| `MinPostureRegenRate` | 체력이 바닥일 때 자세가 회복되는 속도. 0보다 크고 `BasePostureRegenRate`보다 작다 (R-4) |
+| `PostureRegenHealthExponent` | 체력 비율에 거는 지수. 클수록 체력 영향이 커진다. 0보다 크다 (R-4) |
 | `PostureRegenDelay` | 자세가 깎인 뒤 다시 회복되기 시작할 때까지의 시간 (R-3) |
 
 ## 5. 열린 질문
