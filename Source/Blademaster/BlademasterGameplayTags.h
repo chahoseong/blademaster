@@ -30,6 +30,9 @@ namespace BlademasterGameplayTags
 	// 사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Death_Dead);
 
+	// 자세가 깎인 뒤 회복이 멈춰 있는 중. 회복 대기 GE가 지속 시간 동안 붙이고, 회복 GE는 이 태그가 있는 동안 실행되지 않는다.
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Posture_RegenDelay);
+
 	// 한 타 안의 구간들. 몽타주의 UBlademasterAnimNotifyState_GameplayTag가 붙였다 뗀다.
 	// 부모 태그(Attack_Window)는 직접 붙이지 않고, 하위 구간을 한꺼번에 찾을 때만 쓴다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Attack_Window);

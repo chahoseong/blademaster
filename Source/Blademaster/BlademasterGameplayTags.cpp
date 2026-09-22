@@ -14,7 +14,8 @@ namespace BlademasterGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death, "State.Death", "죽었거나 죽어가는 중. 하위 상태가 공유하는 성질(판정 제외, 락온 후보 제외)을 한 번에 질의하는 부모 태그.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death_Dying, "State.Death.Dying", "사망 몽타주 재생 중.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death_Dead, "State.Death.Dead", "사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window, "Attack.Window", "한 타 안의 구간 태그들의 부모. 직접 붙이지 않고 하위 구간을 한꺼번에 찾을 때 쓴다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Posture_RegenDelay, "State.Posture.RegenDelay", "자세가 깎인 뒤 회복이 멈춰 있는 중. 회복 대기 GE가 붙이고, 회복 GE는 이 태그가 있는 동안 실행되지 않는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window,"Attack.Window", "한 타 안의 구간 태그들의 부모. 직접 붙이지 않고 하위 구간을 한꺼번에 찾을 때 쓴다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Input, "Attack.Window.Input", "선입력 구간. 이 구간에 눌린 공격 입력을 기억해둔다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Combo, "Attack.Window.Combo", "이어가기 구간. 시작 시 또는 구간 중 공격 입력이 있으면 다음 타로 넘어간다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Attack_Window_Cancel, "Attack.Window.Cancel", "캔슬 구간. 이 태그가 있는 동안 다른 어빌리티가 이 공격을 끊을 수 있다(실제로 끊는 로직은 여기 없음).");

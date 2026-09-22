@@ -127,6 +127,11 @@ void ABlademasterCharacter::BeginPlay()
 			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
+
+	if (CombatComponent)
+	{
+		CombatComponent->ApplyPostureRegen();
+	}
 }
 
 void ABlademasterCharacter::NotifyControllerChanged()

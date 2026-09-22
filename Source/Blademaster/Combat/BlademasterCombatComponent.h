@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "BlademasterCombatComponent.generated.h"
 
+class UAbilitySystemComponent;
 class UGameplayAbility;
 class UGameplayEffect;
 struct FGameplayEventData;
@@ -33,6 +34,9 @@ struct FBlademasterCombatAbilityToGrant
 // 이미 죽었으면 무시하고, 데미지 GE를 적용하고, 확정된 체력으로 결과(피격/사망)를 정하고,
 // 피격 방향을 구한 뒤 결과를 GameplayEvent.Reaction.Hit/Death로 자신에게 보낸다.
 // 반응 어빌리티(GA_HitReact, GA_Death)는 그 결과를 재생만 하고 규칙 판단은 하지 않는다.
+//
+// 자세 회복: 시작할 때 무한 주기 회복 GE를 적용하고, 타격으로 자세가 줄면 회복 대기 GE를 적용한다.
+// 대기 GE가 붙이는 State.Posture.RegenDelay가 있는 동안 회복 GE가 멈추고, 다시 적용하면 대기가 처음부터 다시 센다.
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class BLADEMASTER_API UBlademasterCombatComponent : public UActorComponent
 {
@@ -46,6 +50,9 @@ public:
 
 	// 타격 이벤트 구독을 시작한다. GrantStartingAbilities와 마찬가지로 ASC 초기화가 끝난 뒤 한 번만 호출한다.
 	void StartListeningForHits();
+
+	// 자세 회복 GE를 적용한다. 초기화 GE를 적용한 뒤 한 번만 호출한다. 되살아날 때는 다시 부르지 않는다 — 회복 GE는 무한 GE라 남아 있다.
+	void ApplyPostureRegen();
 
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
@@ -64,8 +71,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Hit", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
+	// 자세를 주기적으로 회복하는 무한 GE. State.Posture.RegenDelay가 있는 동안 멈춘다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Posture", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> PostureRegenEffectClass;
+
+	// 자세가 깎였을 때 적용하는 회복 대기 GE. 지속 시간 동안 State.Posture.RegenDelay를 붙인다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Posture", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> PostureRegenDelayEffectClass;
+
 private:
 	void OnWeaponHitEvent(FGameplayTag EventTag, const FGameplayEventData* Payload);
 
+	// 자세가 줄었을 때 회복 대기를 (다시) 시작한다.
+	void StartPostureRegenDelay(UAbilitySystemComponent* AbilitySystemComponent);
+
+	void OnPostureRegenDelayTagChanged(const FGameplayTag Tag, int32 NewCount);
+
 	FDelegateHandle WeaponHitEventHandle;
+	FDelegateHandle PostureRegenDelayTagHandle;
 };

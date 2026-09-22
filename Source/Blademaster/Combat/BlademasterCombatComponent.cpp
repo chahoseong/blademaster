@@ -51,12 +51,42 @@ void UBlademasterCombatComponent::StartListeningForHits()
 		FGameplayEventTagMulticastDelegate::FDelegate::CreateUObject(this, &UBlademasterCombatComponent::OnWeaponHitEvent));
 }
 
+void UBlademasterCombatComponent::ApplyPostureRegen()
+{
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	if (!AbilitySystemComponent || PostureRegenDelayTagHandle.IsValid())
+	{
+		return;
+	}
+
+	if (!PostureRegenEffectClass)
+	{
+		UE_LOG(LogBlademasterCombat, Warning, TEXT("%s: PostureRegenEffectClass가 지정되지 않아 자세가 회복되지 않는다"), *GetNameSafe(GetOwner()));
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(GetOwner());
+	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(PostureRegenEffectClass, 1.f, EffectContext);
+	if (SpecHandle.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
+
+	// 대기가 끝나 회복이 다시 시작되는 시점을 로그로 남긴다.
+	PostureRegenDelayTagHandle = AbilitySystemComponent->RegisterGameplayTagEvent(BlademasterGameplayTags::State_Posture_RegenDelay, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &UBlademasterCombatComponent::OnPostureRegenDelayTagChanged);
+}
+
 void UBlademasterCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+
 	if (WeaponHitEventHandle.IsValid())
 	{
-		const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
-		if (UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr)
+		if (AbilitySystemComponent)
 		{
 			AbilitySystemComponent->RemoveGameplayEventTagContainerDelegate(
 				FGameplayTagContainer(BlademasterGameplayTags::GameplayEvent_Weapon_Hit), WeaponHitEventHandle);
@@ -64,7 +94,49 @@ void UBlademasterCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReas
 		WeaponHitEventHandle.Reset();
 	}
 
+	if (PostureRegenDelayTagHandle.IsValid())
+	{
+		if (AbilitySystemComponent)
+		{
+			AbilitySystemComponent->RegisterGameplayTagEvent(BlademasterGameplayTags::State_Posture_RegenDelay, EGameplayTagEventType::NewOrRemoved)
+				.Remove(PostureRegenDelayTagHandle);
+		}
+		PostureRegenDelayTagHandle.Reset();
+	}
+
 	Super::EndPlay(EndPlayReason);
+}
+
+void UBlademasterCombatComponent::StartPostureRegenDelay(UAbilitySystemComponent* AbilitySystemComponent)
+{
+	if (!PostureRegenDelayEffectClass)
+	{
+		UE_LOG(LogBlademasterCombat, Warning, TEXT("%s: PostureRegenDelayEffectClass가 지정되지 않아 자세가 깎여도 회복이 멈추지 않는다"), *GetNameSafe(GetOwner()));
+		return;
+	}
+
+	const bool bWasDelaying = AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Posture_RegenDelay);
+
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(GetOwner());
+	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(PostureRegenDelayEffectClass, 1.f, EffectContext);
+	if (!SpecHandle.IsValid())
+	{
+		return;
+	}
+	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+	const UBlademasterAttributeSet* AttributeSet = AbilitySystemComponent->GetSet<UBlademasterAttributeSet>();
+	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 자세 회복 대기 %s (%.2f초)"), *GetNameSafe(GetOwner()),
+		bWasDelaying ? TEXT("다시 시작") : TEXT("시작"), AttributeSet ? AttributeSet->GetPostureRegenDelay() : 0.f);
+}
+
+void UBlademasterCombatComponent::OnPostureRegenDelayTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (NewCount == 0)
+	{
+		UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 자세 회복 대기가 끝나 회복을 다시 시작한다"), *GetNameSafe(GetOwner()));
+	}
 }
 
 void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
@@ -121,6 +193,12 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 	SpecHandle.Data->SetSetByCallerMagnitude(BlademasterGameplayTags::SetByCaller_Damage_Health, Context->HealthDamage);
 	SpecHandle.Data->SetSetByCallerMagnitude(BlademasterGameplayTags::SetByCaller_Damage_Posture, Context->PostureDamage);
 	VictimAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+	// 자세가 실제로 줄었을 때만 회복을 멈춘다(001 R-3). 피해가 0이었거나 이미 0이었으면 대기를 건드리지 않는다.
+	if (AttributeSet->GetPosture() < OldPosture)
+	{
+		StartPostureRegenDelay(VictimAbilitySystemComponent);
+	}
 
 	// ③ 확정된 체력으로 결과를 정하고, 그 결과를 이름으로 지정한 이벤트로 알린다.
 	const bool bKilled = AttributeSet->GetHealth() <= 0.f;
