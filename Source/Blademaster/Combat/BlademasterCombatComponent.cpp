@@ -133,10 +133,21 @@ void UBlademasterCombatComponent::StartPostureRegenDelay(UAbilitySystemComponent
 
 void UBlademasterCombatComponent::OnPostureRegenDelayTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	if (NewCount == 0)
+	if (NewCount != 0)
 	{
-		UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 자세 회복 대기가 끝나 회복을 다시 시작한다"), *GetNameSafe(GetOwner()));
+		return;
 	}
+
+	// 붕괴 중에는 회복 GE가 State.Stagger로도 멈춰 있어서 대기가 끝나도 회복하지 않는다.
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	const UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	if (AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Stagger))
+	{
+		UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 자세 회복 대기가 끝났지만 붕괴 중이라 회복하지 않는다"), *GetNameSafe(GetOwner()));
+		return;
+	}
+
+	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 자세 회복 대기가 끝나 회복을 다시 시작한다"), *GetNameSafe(GetOwner()));
 }
 
 void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
@@ -182,6 +193,9 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 	const float OldHealth = AttributeSet->GetHealth();
 	const float OldPosture = AttributeSet->GetPosture();
 
+	// 붕괴 중인지는 피해를 적용하기 전에 본다. 붕괴 중이면 데미지 GE의 자세 모디파이어가 적용되지 않는다(GE 데이터의 대상 태그 조건).
+	const bool bWasStaggered = VictimAbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Stagger);
+
 	// ② 체력·자세를 깎는다. 스펙은 공격자의 ASC로 만든다 — 공격 데이터(데미지 값)는 공격자가
 	// 이벤트에 실어 보낸 컨텍스트에 이미 있다. 인스턴트 GE는 동기적으로 실행되므로 적용 직후 값이 확정된다.
 	const FGameplayEffectSpecHandle SpecHandle = AttackerAbilitySystemComponent->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
@@ -200,13 +214,42 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 		StartPostureRegenDelay(VictimAbilitySystemComponent);
 	}
 
-	// ③ 확정된 체력으로 결과를 정하고, 그 결과를 이름으로 지정한 이벤트로 알린다.
+	// ③ 확정된 체력·자세로 결과를 하나 고르고, 그 결과를 이름으로 지정한 이벤트로 알린다.
+	// 사망 > 붕괴 중(반응 없음) > 붕괴 진입 > 피격 — Specs/002-stagger.md R-1, R-4.
+	// 한 GE 안에서 체력·자세가 함께 바뀌므로 둘 다 확정된 뒤에 고른다. 그래야 한 타에 사망과 붕괴가 함께 발동하지 않는다.
 	const bool bKilled = AttributeSet->GetHealth() <= 0.f;
-	const FGameplayTag ReactionTag = bKilled ? BlademasterGameplayTags::GameplayEvent_Reaction_Death : BlademasterGameplayTags::GameplayEvent_Reaction_Hit;
+	const bool bEntersStagger = !bKilled && !bWasStaggered && AttributeSet->GetPosture() <= 0.f;
+
+	FGameplayTag ReactionTag;
+	const TCHAR* ResultName = TEXT("피격");
+	if (bKilled)
+	{
+		ReactionTag = BlademasterGameplayTags::GameplayEvent_Reaction_Death;
+		ResultName = TEXT("사망");
+	}
+	else if (bWasStaggered)
+	{
+		ResultName = TEXT("붕괴 중 — 반응 없음");
+	}
+	else if (bEntersStagger)
+	{
+		ReactionTag = BlademasterGameplayTags::GameplayEvent_Reaction_Stagger;
+		ResultName = TEXT("붕괴 진입");
+	}
+	else
+	{
+		ReactionTag = BlademasterGameplayTags::GameplayEvent_Reaction_Hit;
+	}
 
 	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 타격 해석 — 방향 %s, 결과 %s (체력 %.1f / 자세 %.1f 감소)"),
-		*GetNameSafe(GetOwner()), *UEnum::GetValueAsString(Direction), bKilled ? TEXT("사망") : TEXT("피격"),
+		*GetNameSafe(GetOwner()), *UEnum::GetValueAsString(Direction), ResultName,
 		OldHealth - AttributeSet->GetHealth(), OldPosture - AttributeSet->GetPosture());
+
+	// 붕괴 중에 맞으면 피격 반응을 재생하지 않는다. 체력은 이미 깎였다.
+	if (!ReactionTag.IsValid())
+	{
+		return;
+	}
 
 	FGameplayEventData ReactionPayload = *Payload;
 	ReactionPayload.EventTag = ReactionTag;

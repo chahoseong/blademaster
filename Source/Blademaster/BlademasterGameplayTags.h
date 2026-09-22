@@ -15,6 +15,7 @@ namespace BlademasterGameplayTags
 	// 캐릭터 의지와 무관하게 강제로 일어나는 어빌리티(피격 등). Action류를 끊고 막는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Death);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Stagger);
 
 	// 공격 어빌리티가 활성 상태인 동안(ActivationOwnedTags) 자동으로 붙는다.
 	// 공격류가 아닌 다른 시스템(락온 추적 등)도 "지금 뭔가 하느라 바쁜가"를 물을 때 이 태그를 쓴다.
@@ -29,6 +30,10 @@ namespace BlademasterGameplayTags
 
 	// 사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Death_Dead);
+
+	// 자세가 바닥나 붕괴한 중(Specs/002-stagger.md). GA_Stagger가 활성인 동안 붙는다.
+	// 데미지 GE의 자세 모디파이어와 회복 GE가 이 태그 동안 자세를 바꾸지 않는다.
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Stagger);
 
 	// 자세가 깎인 뒤 회복이 멈춰 있는 중. 회복 대기 GE가 지속 시간 동안 붙이고, 회복 GE는 이 태그가 있는 동안 실행되지 않는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Posture_RegenDelay);
@@ -49,6 +54,7 @@ namespace BlademasterGameplayTags
 	// 부모 태그(GameplayEvent.Reaction)에는 트리거를 걸지 않는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Death);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Stagger);
 
 	// 데미지 GE의 SetByCaller 매그니튜드 태그. CombatComponent가 컨텍스트의 값을 여기 실어 스펙에 넣는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Damage_Health);

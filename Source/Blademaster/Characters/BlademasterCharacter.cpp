@@ -8,6 +8,7 @@
 #include "Combat/BlademasterWeaponTraceComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameplayEffect.h"
 #include "GameplayTagContainer.h"
 #include "MotionWarpingComponent.h"
@@ -99,6 +100,40 @@ UAnimMontage* ABlademasterCharacter::GetDeathMontage(EBlademasterHitDirection Di
 void ABlademasterCharacter::SetCombatCollisionEnabled(bool bEnabled)
 {
 	GetMesh()->SetCollisionResponseToChannel(BlademasterCollisionChannels::Weapon, bEnabled ? ECR_Overlap : ECR_Ignore);
+}
+
+void ABlademasterCharacter::SetMovementEnabled(bool bEnabled)
+{
+	bMovementEnabled = bEnabled;
+
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	if (!Movement)
+	{
+		return;
+	}
+
+	if (bEnabled)
+	{
+		Movement->SetDefaultMovementMode();
+	}
+	else
+	{
+		// 이동 모드를 None으로 두면 입력과 방향 회전(bOrientRotationToMovement)이 모두 멈춘다.
+		Movement->StopMovementImmediately();
+		Movement->DisableMovement();
+	}
+}
+
+void ABlademasterCharacter::FaceRotation(FRotator NewControlRotation, float DeltaTime)
+{
+	// 락온 중 플레이어는 bUseControllerRotationYaw로 몸을 컨트롤러 방향에 맞춘다. 이 플래그는 플레이어의
+	// Tick이 매 프레임 다시 정하므로, 플래그 대신 몸을 돌리는 이 지점에서 막는다.
+	if (!bMovementEnabled)
+	{
+		return;
+	}
+
+	Super::FaceRotation(NewControlRotation, DeltaTime);
 }
 
 void ABlademasterCharacter::BeginPlay()

@@ -31,9 +31,10 @@ struct FBlademasterCombatAbilityToGrant
 // 플레이어 전용이 아니다 — AI도 같은 경로로 어빌리티를 트리거할 수 있다.
 //
 // 타격 라우팅: 공격자가 보낸 GameplayEvent.Weapon.Hit을 받아 피격자 쪽의 규칙을 순서대로 처리한다.
-// 이미 죽었으면 무시하고, 데미지 GE를 적용하고, 확정된 체력으로 결과(피격/사망)를 정하고,
-// 피격 방향을 구한 뒤 결과를 GameplayEvent.Reaction.Hit/Death로 자신에게 보낸다.
-// 반응 어빌리티(GA_HitReact, GA_Death)는 그 결과를 재생만 하고 규칙 판단은 하지 않는다.
+// 이미 죽었으면 무시하고, 데미지 GE를 적용하고, 확정된 체력·자세로 결과(사망/붕괴 진입/피격)를 정하고,
+// 피격 방향을 구한 뒤 결과를 GameplayEvent.Reaction.Death/Stagger/Hit으로 자신에게 보낸다. 붕괴 중에 맞으면
+// 체력만 깎이고 반응 이벤트는 보내지 않는다.
+// 반응 어빌리티(GA_HitReact, GA_Death, GA_Stagger)는 그 결과를 재생만 하고 규칙 판단은 하지 않는다.
 //
 // 자세 회복: 시작할 때 무한 주기 회복 GE를 적용하고, 타격으로 자세가 줄면 회복 대기 GE를 적용한다.
 // 대기 GE가 붙이는 State.Posture.RegenDelay가 있는 동안 회복 GE가 멈추고, 다시 적용하면 대기가 처음부터 다시 센다.

@@ -57,6 +57,11 @@ public:
 	FGameplayAttributeData PostureRegenDelay;
 	ATTRIBUTE_ACCESSORS_BASIC(UBlademasterAttributeSet, PostureRegenDelay)
 
+	// 붕괴가 지속되는 시간(초) — Specs/002-stagger.md R-2. 붕괴에 진입할 때 읽는다.
+	UPROPERTY(BlueprintReadOnly, Category = "Posture")
+	FGameplayAttributeData StaggerDuration;
+	ATTRIBUTE_ACCESSORS_BASIC(UBlademasterAttributeSet, StaggerDuration)
+
 	// 메타 어트리뷰트 — 데미지 GE가 여기 값을 넣으면 PostGameplayEffectExecute가 받아서 실제
 	// 체력·자세에 반영하고 0으로 리셋한다.
 	UPROPERTY(BlueprintReadOnly, Category = "Damage")
