@@ -7,6 +7,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "BlademasterGameplayTags.h"
 #include "BlademasterLogChannels.h"
+#include "Combat/BlademasterGameplayAbility_Guard.h"
 #include "GameplayEffect.h"
 
 UBlademasterCombatComponent::UBlademasterCombatComponent()
@@ -166,8 +167,6 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 		return;
 	}
 
-	// ① 막기·회피가 끼어들 자리 — 지금은 비워둔다(M2).
-
 	const IAbilitySystemInterface* AttackerInterface = Cast<IAbilitySystemInterface>(Payload->Instigator.Get());
 	UAbilitySystemComponent* AttackerAbilitySystemComponent = AttackerInterface ? AttackerInterface->GetAbilitySystemComponent() : nullptr;
 	const UBlademasterAttributeSet* AttributeSet = VictimAbilitySystemComponent->GetSet<UBlademasterAttributeSet>();
@@ -196,9 +195,24 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 	// 붕괴 중인지는 피해를 적용하기 전에 본다. 붕괴 중이면 데미지 GE의 자세 모디파이어가 적용되지 않는다(GE 데이터의 대상 태그 조건).
 	const bool bWasStaggered = VictimAbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Stagger);
 
+	// ① 가드는 피해를 적용하기 전에 정한다 — 가드냐에 따라 적용할 GE가 달라진다.
+	// 막을 수 있는 범위(공격 위치)는 활성 가드가 답한다. 붕괴 중에는 가드가 끊겨 있지만 결과 순서를 코드에도 드러낸다.
+	const AActor* Attacker = Payload->Instigator.Get();
+	const UBlademasterGameplayAbility_Guard* Guard = ActiveGuard.Get();
+	const bool bAttackFromFront = Guard && Attacker && Guard->CanBlockAttackFrom(Attacker->GetActorLocation());
+	const bool bGuarded = bAttackFromFront && !bWasStaggered;
+
+	if (bGuarded && !GuardDamageEffectClass)
+	{
+		UE_LOG(LogBlademasterCombat, Warning, TEXT("%s: GuardDamageEffectClass가 지정되지 않아 가드를 처리하지 못한다"), *GetNameSafe(GetOwner()));
+		return;
+	}
+
 	// ② 체력·자세를 깎는다. 스펙은 공격자의 ASC로 만든다 — 공격 데이터(데미지 값)는 공격자가
 	// 이벤트에 실어 보낸 컨텍스트에 이미 있다. 인스턴트 GE는 동기적으로 실행되므로 적용 직후 값이 확정된다.
-	const FGameplayEffectSpecHandle SpecHandle = AttackerAbilitySystemComponent->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
+	// 가드 GE는 자세 모디파이어만 있어 체력 SetByCaller는 쓰이지 않는다.
+	const TSubclassOf<UGameplayEffect> EffectClass = bGuarded ? GuardDamageEffectClass : DamageEffectClass;
+	const FGameplayEffectSpecHandle SpecHandle = AttackerAbilitySystemComponent->MakeOutgoingSpec(EffectClass, 1.f, ContextHandle);
 	if (!SpecHandle.IsValid())
 	{
 		return;
@@ -215,7 +229,7 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 	}
 
 	// ③ 확정된 체력·자세로 결과를 하나 고르고, 그 결과를 이름으로 지정한 이벤트로 알린다.
-	// 사망 > 붕괴 중(반응 없음) > 붕괴 진입 > 피격 — Specs/002-stagger.md R-1, R-4.
+	// 사망 > 붕괴 중(반응 없음) > 붕괴 진입 > 가드 > 피격 — Specs/002-stagger.md R-1, R-4. 가드로 자세가 0에 닿으면 붕괴 진입이다.
 	// 한 GE 안에서 체력·자세가 함께 바뀌므로 둘 다 확정된 뒤에 고른다. 그래야 한 타에 사망과 붕괴가 함께 발동하지 않는다.
 	const bool bKilled = AttributeSet->GetHealth() <= 0.f;
 	const bool bEntersStagger = !bKilled && !bWasStaggered && AttributeSet->GetPosture() <= 0.f;
@@ -236,16 +250,23 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 		ReactionTag = BlademasterGameplayTags::GameplayEvent_Reaction_Stagger;
 		ResultName = TEXT("붕괴 진입");
 	}
+	else if (bGuarded)
+	{
+		// 가드 반응 이벤트는 아직 없다.
+		ResultName = TEXT("가드");
+	}
 	else
 	{
 		ReactionTag = BlademasterGameplayTags::GameplayEvent_Reaction_Hit;
 	}
 
-	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 타격 해석 — 방향 %s, 결과 %s (체력 %.1f / 자세 %.1f 감소)"),
-		*GetNameSafe(GetOwner()), *UEnum::GetValueAsString(Direction), ResultName,
+	// 공격 위치는 가드 중일 때만 물어보므로 가드가 아니면 판정하지 않았다고 적는다.
+	const TCHAR* PositionName = !Guard ? TEXT("판정 안 함(가드 아님)") : (bAttackFromFront ? TEXT("정면") : TEXT("비정면"));
+	UE_LOG(LogBlademasterCombat, Log, TEXT("%s: 타격 해석 — 방향 %s, 공격 위치 %s, 결과 %s (체력 %.1f / 자세 %.1f 감소)"),
+		*GetNameSafe(GetOwner()), *UEnum::GetValueAsString(Direction), PositionName, ResultName,
 		OldHealth - AttributeSet->GetHealth(), OldPosture - AttributeSet->GetPosture());
 
-	// 붕괴 중에 맞으면 피격 반응을 재생하지 않는다. 체력은 이미 깎였다.
+	// 붕괴 중에 맞거나 가드로 막으면 반응 이벤트를 보내지 않는다. 피해는 이미 적용됐다.
 	if (!ReactionTag.IsValid())
 	{
 		return;
@@ -276,6 +297,19 @@ EBlademasterHitDirection UBlademasterCombatComponent::ComputeHitDirection(const 
 	}
 
 	return RightDot > 0.f ? EBlademasterHitDirection::Left : EBlademasterHitDirection::Right;
+}
+
+void UBlademasterCombatComponent::SetActiveGuard(UBlademasterGameplayAbility_Guard* Guard)
+{
+	ActiveGuard = Guard;
+}
+
+void UBlademasterCombatComponent::ClearActiveGuard(const UBlademasterGameplayAbility_Guard* Guard)
+{
+	if (ActiveGuard.Get() == Guard)
+	{
+		ActiveGuard.Reset();
+	}
 }
 
 void UBlademasterCombatComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)

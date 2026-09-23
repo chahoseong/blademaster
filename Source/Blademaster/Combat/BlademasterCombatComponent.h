@@ -7,6 +7,7 @@
 #include "BlademasterCombatComponent.generated.h"
 
 class UAbilitySystemComponent;
+class UBlademasterGameplayAbility_Guard;
 class UGameplayAbility;
 class UGameplayEffect;
 struct FGameplayEventData;
@@ -31,9 +32,12 @@ struct FBlademasterCombatAbilityToGrant
 // 플레이어 전용이 아니다 — AI도 같은 경로로 어빌리티를 트리거할 수 있다.
 //
 // 타격 라우팅: 공격자가 보낸 GameplayEvent.Weapon.Hit을 받아 피격자 쪽의 규칙을 순서대로 처리한다.
-// 이미 죽었으면 무시하고, 데미지 GE를 적용하고, 확정된 체력·자세로 결과(사망/붕괴 진입/피격)를 정하고,
-// 피격 방향을 구한 뒤 결과를 GameplayEvent.Reaction.Death/Stagger/Hit으로 자신에게 보낸다. 붕괴 중에 맞으면
-// 체력만 깎이고 반응 이벤트는 보내지 않는다.
+// 이미 죽었으면 무시하고, 활성 가드가 그 공격을 막는지 물어 적용할 데미지 GE(가드/일반)를 고르고, 적용한 뒤
+// 확정된 체력·자세로 결과(사망/붕괴 진입/가드/피격)를 정하고, 피격 방향을 구한 뒤 결과를
+// GameplayEvent.Reaction.Death/Stagger/Hit으로 자신에게 보낸다. 붕괴 중에 맞으면 체력만 깎이고 반응 이벤트는 보내지 않는다.
+// 가드 결과는 아직 반응 이벤트를 보내지 않는다.
+//
+// 가드: 가드 어빌리티가 활성인 동안 SetActiveGuard로 자신을 알린다. 막을 수 있는 범위는 가드가 답하고, 결과는 여기서 정한다.
 // 반응 어빌리티(GA_HitReact, GA_Death, GA_Stagger)는 그 결과를 재생만 하고 규칙 판단은 하지 않는다.
 //
 // 자세 회복: 시작할 때 무한 주기 회복 GE를 적용하고, 타격으로 자세가 줄면 회복 대기 GE를 적용한다.
@@ -55,6 +59,12 @@ public:
 	// 자세 회복 GE를 적용한다. 초기화 GE를 적용한 뒤 한 번만 호출한다. 되살아날 때는 다시 부르지 않는다 — 회복 GE는 무한 GE라 남아 있다.
 	void ApplyPostureRegen();
 
+	// 타격을 해석할 때 물어볼 활성 가드. 가드 어빌리티가 활성화될 때 설정한다.
+	void SetActiveGuard(UBlademasterGameplayAbility_Guard* Guard);
+
+	// Guard가 지금 활성 가드일 때만 비운다. 가드가 끝나자마자 다시 켜져도 새 가드를 지우지 않는다.
+	void ClearActiveGuard(const UBlademasterGameplayAbility_Guard* Guard);
+
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
@@ -72,6 +82,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Hit", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
+	// 가드로 막았을 때 적용하는 데미지 GE. 자세만 깎는다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Hit", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> GuardDamageEffectClass;
+
 	// 자세를 주기적으로 회복하는 무한 GE. State.Posture.RegenDelay가 있는 동안 멈춘다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Posture", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UGameplayEffect> PostureRegenEffectClass;
@@ -87,6 +101,8 @@ private:
 	void StartPostureRegenDelay(UAbilitySystemComponent* AbilitySystemComponent);
 
 	void OnPostureRegenDelayTagChanged(const FGameplayTag Tag, int32 NewCount);
+
+	TWeakObjectPtr<UBlademasterGameplayAbility_Guard> ActiveGuard;
 
 	FDelegateHandle WeaponHitEventHandle;
 	FDelegateHandle PostureRegenDelayTagHandle;
