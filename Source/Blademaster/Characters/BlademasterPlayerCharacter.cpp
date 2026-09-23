@@ -134,6 +134,8 @@ void ABlademasterPlayerCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		EnhancedInputComponent->BindAction(SwitchTargetStickAction, ETriggerEvent::Completed, this, &ABlademasterPlayerCharacter::ResetSwitchTargetStick);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ABlademasterPlayerCharacter::AttackPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ABlademasterPlayerCharacter::AttackReleased);
+		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Started, this, &ABlademasterPlayerCharacter::GuardPressed);
+		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &ABlademasterPlayerCharacter::GuardReleased);
 	}
 }
 
@@ -213,5 +215,21 @@ void ABlademasterPlayerCharacter::AttackReleased(const FInputActionValue& Value)
 	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
 	{
 		Combat->AbilityInputTagReleased(BlademasterGameplayTags::InputTag_Attack);
+	}
+}
+
+void ABlademasterPlayerCharacter::GuardPressed(const FInputActionValue& Value)
+{
+	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
+	{
+		Combat->AbilityInputTagPressed(BlademasterGameplayTags::InputTag_Guard);
+	}
+}
+
+void ABlademasterPlayerCharacter::GuardReleased(const FInputActionValue& Value)
+{
+	if (UBlademasterCombatComponent* Combat = GetCombatComponent())
+	{
+		Combat->AbilityInputTagReleased(BlademasterGameplayTags::InputTag_Guard);
 	}
 }

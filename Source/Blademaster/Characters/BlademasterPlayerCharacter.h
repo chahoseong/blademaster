@@ -37,6 +37,8 @@ protected:
 	void ResetSwitchTargetStick(const FInputActionValue& Value);
 	void AttackPressed(const FInputActionValue& Value);
 	void AttackReleased(const FInputActionValue& Value);
+	void GuardPressed(const FInputActionValue& Value);
+	void GuardReleased(const FInputActionValue& Value);
 
 	// 락온 대상이 바뀔 때(락온/해제 포함) 회전 모드를 전환한다.
 	void OnLockOnTargetChanged(AActor* NewTarget);
@@ -74,6 +76,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> AttackAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> GuardAction;
 
 private:
 	// 락온 중이 아닐 때, 콤보 전체에 걸쳐 스틱 방향을 한 번만 반영하기 위한 캐시.

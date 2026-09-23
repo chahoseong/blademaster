@@ -1,5 +1,8 @@
 #include "Animation/BlademasterAnimInstance.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
+#include "BlademasterGameplayTags.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -26,8 +29,13 @@ void UBlademasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		MoveRight = 0.f;
 		HorizontalAngle = 0.f;
 		VerticalAngle = 0.f;
+		bIsGuarding = false;
 		return;
 	}
+
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(OwningCharacter);
+	const UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	bIsGuarding = AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(BlademasterGameplayTags::State_Guard);
 
 	const UCharacterMovementComponent* MovementComponent = OwningCharacter->GetCharacterMovement();
 	const float MaxSpeed = MovementComponent ? MovementComponent->GetMaxSpeed() : 0.f;

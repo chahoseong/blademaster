@@ -29,6 +29,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Look", meta = (AllowPrivateAccess = "true"))
 	float VerticalAngle = 0.f;
 
+	// State.Guard를 보유하는 동안 true. 상체 가드 자세의 블렌드에 쓴다.
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bIsGuarding = false;
+
 private:
 	UPROPERTY()
 	TObjectPtr<ACharacter> OwningCharacter;

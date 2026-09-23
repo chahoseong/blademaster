@@ -4,16 +4,21 @@ namespace BlademasterGameplayTags
 {
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Attack, "InputTag.Attack", "공격 입력 액션에 붙는 태그. 어빌리티 스펙의 DynamicSpecSourceTags와 매칭해 입력을 전달한다.");
 
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action, "Ability.Action", "캐릭터가 선택해서 하는 어빌리티(공격 등)의 부모 태그. 피격 등 Reaction류에 끊기고 막힌다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Guard, "InputTag.Guard", "가드 입력 액션에 붙는 태그. 누르는 동안 GA_Guard가 활성이다.");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action,"Ability.Action", "캐릭터가 선택해서 하는 어빌리티(공격 등)의 부모 태그. 피격 등 Reaction류에 끊기고 막힌다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action_Attack, "Ability.Action.Attack", "공격류 어빌리티(콤보 등)를 식별하는 태그.");
 
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Hit, "Ability.Reaction.Hit", "피격 반응 어빌리티(GA_HitReact)를 식별하는 태그. Action류를 끊고 막는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Action_Guard, "Ability.Action.Guard", "가드 어빌리티(GA_Guard)를 식별하는 태그. Action류라 피격 반응·붕괴·사망에 끊기고 막힌다.");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Hit,"Ability.Reaction.Hit", "피격 반응 어빌리티(GA_HitReact)를 식별하는 태그. Action류를 끊고 막는다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Death, "Ability.Reaction.Death", "사망 어빌리티(GA_Death)를 식별하는 태그. Action류를 끊고 막는다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Stagger, "Ability.Reaction.Stagger", "붕괴 어빌리티(GA_Stagger)를 식별하는 태그. Action류와 피격 반응을 끊고 막는다. GA_Death가 취소한다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Attacking,"State.Attacking", "공격 어빌리티가 활성 상태인 동안 붙어 있다. 락온 추적 등 다른 시스템이 이 태그로 공격 중 여부를 판단한다.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death, "State.Death", "죽었거나 죽어가는 중. 하위 상태가 공유하는 성질(판정 제외, 락온 후보 제외)을 한 번에 질의하는 부모 태그.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Guard, "State.Guard", "가드 입력을 누르고 있어 방어 상태인 동안 붙는다. 라우터가 가드 결과를 고를 때 읽는다.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death,"State.Death", "죽었거나 죽어가는 중. 하위 상태가 공유하는 성질(판정 제외, 락온 후보 제외)을 한 번에 질의하는 부모 태그.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death_Dying, "State.Death.Dying", "사망 몽타주 재생 중.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death_Dead, "State.Death.Dead", "사망 몽타주가 끝나고 부활을 기다리는 중. GA_Respawn이 이 태그를 트리거(OwnedTagAdded)로 듣는다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Stagger, "State.Stagger", "자세가 바닥나 붕괴한 중. GA_Stagger가 활성인 동안 붙고, 그동안 자세가 깎이지도 회복되지도 않는다.");
