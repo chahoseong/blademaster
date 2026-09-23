@@ -18,6 +18,7 @@ namespace BlademasterGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Death);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Stagger);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Reaction_Guard);
 
 	// 공격 어빌리티가 활성 상태인 동안(ActivationOwnedTags) 자동으로 붙는다.
 	// 공격류가 아닌 다른 시스템(락온 추적 등)도 "지금 뭔가 하느라 바쁜가"를 물을 때 이 태그를 쓴다.
@@ -60,6 +61,7 @@ namespace BlademasterGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Death);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Stagger);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEvent_Reaction_Guard);
 
 	// 데미지 GE의 SetByCaller 매그니튜드 태그. CombatComponent가 컨텍스트의 값을 여기 실어 스펙에 넣는다.
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Damage_Health);

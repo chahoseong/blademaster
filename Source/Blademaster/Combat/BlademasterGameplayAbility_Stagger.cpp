@@ -18,6 +18,7 @@ UBlademasterGameplayAbility_Stagger::UBlademasterGameplayAbility_Stagger()
 	// 스스로 하는 행동(Ability.Action 계열)과 피격 반응을 끊고, 붕괴가 끝날 때까지 막는다.
 	CancelAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Action);
 	CancelAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Reaction_Hit);
+	CancelAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Reaction_Guard);
 	BlockAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Action);
 	BlockAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Reaction_Hit);
 	ActivationBlockedTags.AddTag(BlademasterGameplayTags::State_Death);

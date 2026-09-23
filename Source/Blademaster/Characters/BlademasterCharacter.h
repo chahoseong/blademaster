@@ -42,6 +42,9 @@ public:
 	// 방향에 맞는 피격 몽타주 후보 목록(왼쪽만 2개 — 랜덤 선택용, 나머지는 1개). 피격 어빌리티가 쓴다.
 	const TArray<TObjectPtr<UAnimMontage>>& GetHitReactMontages(EBlademasterHitDirection Direction) const;
 
+	// 가드 반응 몽타주 후보 목록(랜덤 선택용). 모두 정면을 막는 동작이라 피격 방향과 무관하다 — 가드가 성립하면 공격자를 향해 돌기 때문이다.
+	const TArray<TObjectPtr<UAnimMontage>>& GetGuardReactMontages() const { return GuardReactMontages; }
+
 	// 방향에 맞는 사망 몽타주. 정면은 왼쪽 몽타주를 대신 쓴다(둘 중 하나만 있으면 되는 요구사항).
 	UAnimMontage* GetDeathMontage(EBlademasterHitDirection Direction) const;
 
@@ -105,6 +108,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Reaction", meta = (AllowPrivateAccess = "true"))
 	TArray<TObjectPtr<UAnimMontage>> HitReactMontages_Right;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Reaction", meta = (AllowPrivateAccess = "true"))
+	TArray<TObjectPtr<UAnimMontage>> GuardReactMontages;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Reaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> DeathMontage_Left;

@@ -198,7 +198,7 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 	// ① 가드는 피해를 적용하기 전에 정한다 — 가드냐에 따라 적용할 GE가 달라진다.
 	// 막을 수 있는 범위(공격 위치)는 활성 가드가 답한다. 붕괴 중에는 가드가 끊겨 있지만 결과 순서를 코드에도 드러낸다.
 	const AActor* Attacker = Payload->Instigator.Get();
-	const UBlademasterGameplayAbility_Guard* Guard = ActiveGuard.Get();
+	UBlademasterGameplayAbility_Guard* Guard = ActiveGuard.Get();
 	const bool bAttackFromFront = Guard && Attacker && Guard->CanBlockAttackFrom(Attacker->GetActorLocation());
 	const bool bGuarded = bAttackFromFront && !bWasStaggered;
 
@@ -252,8 +252,11 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 	}
 	else if (bGuarded)
 	{
-		// 가드 반응 이벤트는 아직 없다.
+		ReactionTag = BlademasterGameplayTags::GameplayEvent_Reaction_Guard;
 		ResultName = TEXT("가드");
+
+		// 가드가 성립했음을 가드에 알린다(공격자를 향해 돈다). 반응 이벤트보다 먼저 — 반응 몽타주의 루트 모션이 돈 뒤의 방향으로 밀려나게 한다.
+		Guard->OnAttackBlocked(Attacker);
 	}
 	else
 	{
@@ -266,7 +269,7 @@ void UBlademasterCombatComponent::OnWeaponHitEvent(FGameplayTag EventTag, const 
 		*GetNameSafe(GetOwner()), *UEnum::GetValueAsString(Direction), PositionName, ResultName,
 		OldHealth - AttributeSet->GetHealth(), OldPosture - AttributeSet->GetPosture());
 
-	// 붕괴 중에 맞거나 가드로 막으면 반응 이벤트를 보내지 않는다. 피해는 이미 적용됐다.
+	// 붕괴 중에 맞으면 반응 이벤트를 보내지 않는다. 피해는 이미 적용됐다.
 	if (!ReactionTag.IsValid())
 	{
 		return;

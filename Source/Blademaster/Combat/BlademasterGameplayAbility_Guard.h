@@ -7,7 +7,8 @@
 // 가드 입력(InputTag.Guard)을 누르고 있는 동안 방어 상태가 된다. 떼면 끝난다.
 // 활성인 동안 State.Guard를 보유하고, 라우터(UBlademasterCombatComponent)에 자신을 활성 가드로 알린다.
 // 라우터는 타격을 해석할 때 이 가드에 그 공격을 막을 수 있는지 묻고, 결과(가드/피격 등)는 라우터가 정한다.
-// 이 어빌리티가 답하는 것은 가드의 유효 범위 — 공격자가 정면 ±FrontHalfAngle 안에 있는지 — 뿐이다.
+// 이 어빌리티가 답하는 것은 가드의 유효 범위 — 공격자가 정면 ±FrontHalfAngle 안에 있는지 — 뿐이고,
+// 결과가 가드로 정해지면 라우터가 OnAttackBlocked로 알려 공격자를 향해 돈다.
 //
 // Ability.Action.Guard라서 피격 반응·붕괴·사망이 끊고 막는다. 끊긴 뒤에는 누르고 있어도 다시 눌러야 가드한다 —
 // 붕괴 중에 들어온 가드 입력이 붕괴가 끝난 뒤 자동으로 성립하지 않는 것(Specs/002-stagger.md R-3)도 이 때문이다.
@@ -25,6 +26,10 @@ public:
 
 	// AttackerLocation에서 온 공격이 이 가드의 유효 범위 안인지. 가드하는 캐릭터의 현재 위치·방향으로 판단한다.
 	bool CanBlockAttackFrom(const FVector& AttackerLocation) const;
+
+	// 라우터가 결과를 가드로 정했을 때 부른다. 공격자를 향해 즉시 돈다(yaw만) — 막는 동작이 정면용이라서다.
+	// 돌고 나면 다음 판정의 정면도 바뀌므로 연출(가드 반응)이 아니라 여기서 한다.
+	void OnAttackBlocked(const AActor* Attacker);
 
 	// 수평면에서 공격자가 피격자 정면 ±HalfAngleDegrees 안에 있으면 true. 경계는 포함한다.
 	// 높이 차이는 무시하고, 두 위치가 겹쳐 방향이 없으면 정면으로 본다.

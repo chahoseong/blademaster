@@ -34,11 +34,11 @@ struct FBlademasterCombatAbilityToGrant
 // 타격 라우팅: 공격자가 보낸 GameplayEvent.Weapon.Hit을 받아 피격자 쪽의 규칙을 순서대로 처리한다.
 // 이미 죽었으면 무시하고, 활성 가드가 그 공격을 막는지 물어 적용할 데미지 GE(가드/일반)를 고르고, 적용한 뒤
 // 확정된 체력·자세로 결과(사망/붕괴 진입/가드/피격)를 정하고, 피격 방향을 구한 뒤 결과를
-// GameplayEvent.Reaction.Death/Stagger/Hit으로 자신에게 보낸다. 붕괴 중에 맞으면 체력만 깎이고 반응 이벤트는 보내지 않는다.
-// 가드 결과는 아직 반응 이벤트를 보내지 않는다.
+// GameplayEvent.Reaction.Death/Stagger/Guard/Hit으로 자신에게 보낸다. 붕괴 중에 맞으면 체력만 깎이고 반응 이벤트는 보내지 않는다.
 //
 // 가드: 가드 어빌리티가 활성인 동안 SetActiveGuard로 자신을 알린다. 막을 수 있는 범위는 가드가 답하고, 결과는 여기서 정한다.
-// 반응 어빌리티(GA_HitReact, GA_Death, GA_Stagger)는 그 결과를 재생만 하고 규칙 판단은 하지 않는다.
+// 결과가 가드면 OnAttackBlocked로 가드에 알린다.
+// 반응 어빌리티(GA_HitReact, GA_Death, GA_Stagger, GA_GuardReact)는 그 결과를 재생만 하고 규칙 판단은 하지 않는다.
 //
 // 자세 회복: 시작할 때 무한 주기 회복 GE를 적용하고, 타격으로 자세가 줄면 회복 대기 GE를 적용한다.
 // 대기 GE가 붙이는 State.Posture.RegenDelay가 있는 동안 회복 GE가 멈추고, 다시 적용하면 대기가 처음부터 다시 센다.

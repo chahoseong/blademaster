@@ -65,6 +65,25 @@ bool UBlademasterGameplayAbility_Guard::CanBlockAttackFrom(const FVector& Attack
 	return Avatar && IsWithinFrontArc(Avatar->GetActorLocation(), Avatar->GetActorForwardVector(), AttackerLocation, FrontHalfAngle);
 }
 
+void UBlademasterGameplayAbility_Guard::OnAttackBlocked(const AActor* Attacker)
+{
+	AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (!Avatar || !Attacker)
+	{
+		return;
+	}
+
+	const FVector ToAttacker = (Attacker->GetActorLocation() - Avatar->GetActorLocation()).GetSafeNormal2D();
+	if (ToAttacker.IsNearlyZero())
+	{
+		return;
+	}
+
+	FRotator Rotation = Avatar->GetActorRotation();
+	Rotation.Yaw = ToAttacker.Rotation().Yaw;
+	Avatar->SetActorRotation(Rotation);
+}
+
 bool UBlademasterGameplayAbility_Guard::IsWithinFrontArc(const FVector& VictimLocation, const FVector& VictimForward, const FVector& AttackerLocation, float HalfAngleDegrees)
 {
 	const FVector ToAttacker = (AttackerLocation - VictimLocation).GetSafeNormal2D();

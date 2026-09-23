@@ -16,6 +16,8 @@ namespace BlademasterGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Stagger, "Ability.Reaction.Stagger", "붕괴 어빌리티(GA_Stagger)를 식별하는 태그. Action류와 피격 반응을 끊고 막는다. GA_Death가 취소한다.");
 
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Reaction_Guard, "Ability.Reaction.Guard", "가드 반응 어빌리티(GA_GuardReact)를 식별하는 태그. 가드는 끊지 않고 공격만 막는다. 붕괴·사망이 취소한다.");
+
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Attacking,"State.Attacking", "공격 어빌리티가 활성 상태인 동안 붙어 있다. 락온 추적 등 다른 시스템이 이 태그로 공격 중 여부를 판단한다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Guard, "State.Guard", "가드 입력을 누르고 있어 방어 상태인 동안 붙는다. 라우터가 가드 결과를 고를 때 읽는다.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(State_Death,"State.Death", "죽었거나 죽어가는 중. 하위 상태가 공유하는 성질(판정 제외, 락온 후보 제외)을 한 번에 질의하는 부모 태그.");
@@ -33,6 +35,8 @@ namespace BlademasterGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Reaction_Death, "GameplayEvent.Reaction.Death", "CombatComponent가 타격을 처리한 결과가 사망일 때 자신에게 보내는 이벤트. GA_Death가 듣는다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Reaction_Stagger, "GameplayEvent.Reaction.Stagger", "CombatComponent가 타격을 처리한 결과가 붕괴 진입일 때 자신에게 보내는 이벤트. GA_Stagger가 듣는다.");
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GameplayEvent_Reaction_Guard, "GameplayEvent.Reaction.Guard", "CombatComponent가 타격을 처리한 결과가 가드일 때 자신에게 보내는 이벤트. GA_GuardReact가 듣는다.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Damage_Health,"SetByCaller.Damage.Health", "데미지 GE가 체력 메타 어트리뷰트에 넣을 값의 SetByCaller 태그.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Damage_Posture, "SetByCaller.Damage.Posture", "데미지 GE가 자세 메타 어트리뷰트에 넣을 값의 SetByCaller 태그.");

@@ -21,6 +21,9 @@ UBlademasterGameplayAbility_Death::UBlademasterGameplayAbility_Death()
 	// 붕괴 중에 죽으면 사망이 붕괴를 대신한다(Specs/002-stagger.md R-4).
 	CancelAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Reaction_Stagger);
 
+	// 막아 낸 직후에 죽으면 남은 가드 반응을 끊는다.
+	CancelAbilitiesWithTag.AddTag(BlademasterGameplayTags::Ability_Reaction_Guard);
+
 	FAbilityTriggerData TriggerData;
 	TriggerData.TriggerTag = BlademasterGameplayTags::GameplayEvent_Reaction_Death;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
