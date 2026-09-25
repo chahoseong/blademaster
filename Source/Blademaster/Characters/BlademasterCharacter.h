@@ -55,11 +55,9 @@ public:
 	// 메시의 Weapon 채널 반응만 바꾼다 — 이동·환경 충돌 등 다른 채널은 그대로다.
 	void SetCombatCollisionEnabled(bool bEnabled);
 
-	// 스스로 움직이는 것 전부 — 이동과 몸 회전(락온 중 컨트롤러 방향을 따라 도는 것 포함)을 끄고 켠다.
+	// 이동을 끄고 켠다. 몸 회전(락온 중 컨트롤러 방향을 따라 도는 것)은 막지 않는다.
 	// 붕괴(GA_Stagger)가 끄고 끝날 때 다시 켠다. 입력을 막는 대신 캐릭터 쪽에서 막으므로 AI에도 적용된다.
 	void SetMovementEnabled(bool bEnabled);
-
-	virtual void FaceRotation(FRotator NewControlRotation, float DeltaTime = 0.f) override;
 
 #if !UE_BUILD_SHIPPING
 	// 매 틱, "지금 네 디버그 정보를 그려라"라는 신호. 이 캐릭터가 소유한 어빌리티 등이
@@ -119,8 +117,6 @@ protected:
 	TObjectPtr<UAnimMontage> DeathMontage_Right;
 
 private:
-	bool bMovementEnabled = true;
-
 #if !UE_BUILD_SHIPPING
 	// 체력·자세·구간 태그 등 이 캐릭터 자신이 소유한 정보를 머리 위에 그린다.
 	void DrawOwnCombatDebugText() const;

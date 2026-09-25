@@ -104,8 +104,6 @@ void ABlademasterCharacter::SetCombatCollisionEnabled(bool bEnabled)
 
 void ABlademasterCharacter::SetMovementEnabled(bool bEnabled)
 {
-	bMovementEnabled = bEnabled;
-
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
 	if (!Movement)
 	{
@@ -122,18 +120,6 @@ void ABlademasterCharacter::SetMovementEnabled(bool bEnabled)
 		Movement->StopMovementImmediately();
 		Movement->DisableMovement();
 	}
-}
-
-void ABlademasterCharacter::FaceRotation(FRotator NewControlRotation, float DeltaTime)
-{
-	// 락온 중 플레이어는 bUseControllerRotationYaw로 몸을 컨트롤러 방향에 맞춘다. 이 플래그는 플레이어의
-	// Tick이 매 프레임 다시 정하므로, 플래그 대신 몸을 돌리는 이 지점에서 막는다.
-	if (!bMovementEnabled)
-	{
-		return;
-	}
-
-	Super::FaceRotation(NewControlRotation, DeltaTime);
 }
 
 void ABlademasterCharacter::BeginPlay()
